@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "TransitOps"
+version = "1.0.0"
+id = "artifacts/transitops"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23575
+
+[services.development]
+run = "pnpm --filter @workspace/transitops run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/transitops", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/transitops/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23575"
+BASE_PATH = "/"

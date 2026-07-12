@@ -1,0 +1,2 @@
+- [TransitOps project overview](transitops-overview.md) — full-stack fleet ops platform: Express+JWT backend, Drizzle/PG DB, React+Vite frontend with Orval-codegen hooks
+- [TransitOps custom-fetch auth](transitops-custom-fetch.md) — JWT stored in localStorage as "transitops_token"; custom-fetch.ts injects Bearer header; 401 clears storage and redirects to /login

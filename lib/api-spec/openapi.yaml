@@ -3,13 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TransitOps Smart Transport Operations Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication and authorization
+  - name: vehicles
+    description: Vehicle registry management
+  - name: drivers
+    description: Driver management
+  - name: trips
+    description: Trip dispatch and lifecycle
+  - name: maintenance
+    description: Vehicle maintenance management
+  - name: fuel-logs
+    description: Fuel log management
+  - name: expenses
+    description: Expense tracking
+  - name: dashboard
+    description: Dashboard KPIs and metrics
+  - name: reports
+    description: Analytics and reporting
+
 paths:
   /healthz:
     get:
@@ -24,7 +43,1026 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ────────────────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginCredentials"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenInput"
+      responses:
+        "200":
+          description: New token pair
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid refresh token
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout and revoke token
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+
+  # ─── VEHICLES ─────────────────────────────────────────────────────────────────
+  /vehicles:
+    get:
+      operationId: listVehicles
+      tags: [vehicles]
+      summary: List all vehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/VehicleStatus"
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vehicle"
+    post:
+      operationId: createVehicle
+      tags: [vehicles]
+      summary: Register a new vehicle
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleInput"
+      responses:
+        "201":
+          description: Vehicle created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Registration number already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vehicles/available:
+    get:
+      operationId: listAvailableVehicles
+      tags: [vehicles]
+      summary: List vehicles available for dispatch (excludes In Shop, Retired, On Trip)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Available vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Vehicle"
+
+  /vehicles/{id}:
+    get:
+      operationId: getVehicle
+      tags: [vehicles]
+      summary: Get a vehicle by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Vehicle detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateVehicle
+      tags: [vehicles]
+      summary: Update vehicle details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VehicleUpdate"
+      responses:
+        "200":
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /vehicles/{id}/retire:
+    patch:
+      operationId: retireVehicle
+      tags: [vehicles]
+      summary: Retire a vehicle
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Retired vehicle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Vehicle"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── DRIVERS ──────────────────────────────────────────────────────────────────
+  /drivers:
+    get:
+      operationId: listDrivers
+      tags: [drivers]
+      summary: List all drivers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/DriverStatus"
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: expiringLicense
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of drivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Driver"
+    post:
+      operationId: createDriver
+      tags: [drivers]
+      summary: Register a new driver
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverInput"
+      responses:
+        "201":
+          description: Driver created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /drivers/available:
+    get:
+      operationId: listAvailableDrivers
+      tags: [drivers]
+      summary: List drivers available for dispatch (Available status, valid license)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Available drivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}:
+    get:
+      operationId: getDriver
+      tags: [drivers]
+      summary: Get a driver by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Driver detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateDriver
+      tags: [drivers]
+      summary: Update driver profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverUpdate"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /drivers/{id}/suspend:
+    patch:
+      operationId: suspendDriver
+      tags: [drivers]
+      summary: Suspend a driver
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Suspended driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /drivers/{id}/status:
+    patch:
+      operationId: updateDriverStatus
+      tags: [drivers]
+      summary: Update driver status manually (Available / Off Duty)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DriverStatusUpdate"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  # ─── TRIPS ────────────────────────────────────────────────────────────────────
+  /trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List all trips
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/TripStatus"
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Create a new trip (Draft state)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripInput"
+      responses:
+        "201":
+          description: Trip created in Draft state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          description: Validation error (capacity exceeded, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trips/{id}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get a trip by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update a trip (only in Draft state)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripUpdate"
+      responses:
+        "200":
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/dispatch:
+    post:
+      operationId: dispatchTrip
+      tags: [trips]
+      summary: Dispatch a trip (Draft → Dispatched, sets vehicle + driver On Trip)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dispatched trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          description: Business rule violation (capacity, availability, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trips/{id}/complete:
+    post:
+      operationId: completeTrip
+      tags: [trips]
+      summary: Complete a trip (Dispatched → Completed, restores vehicle + driver)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TripCompletion"
+      responses:
+        "200":
+          description: Completed trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /trips/{id}/cancel:
+    post:
+      operationId: cancelTrip
+      tags: [trips]
+      summary: Cancel a trip (restores vehicle + driver if dispatched)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelled trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  # ─── MAINTENANCE ──────────────────────────────────────────────────────────────
+  /maintenance:
+    get:
+      operationId: listMaintenance
+      tags: [maintenance]
+      summary: List maintenance records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/MaintenanceStatus"
+      responses:
+        "200":
+          description: List of maintenance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MaintenanceLog"
+    post:
+      operationId: createMaintenance
+      tags: [maintenance]
+      summary: Create maintenance record (sets vehicle to In Shop)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceInput"
+      responses:
+        "201":
+          description: Maintenance record created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceLog"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /maintenance/{id}:
+    get:
+      operationId: getMaintenance
+      tags: [maintenance]
+      summary: Get maintenance record by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Maintenance record detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceLog"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /maintenance/{id}/close:
+    post:
+      operationId: closeMaintenance
+      tags: [maintenance]
+      summary: Close maintenance record (restores vehicle to Available unless Retired)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MaintenanceClose"
+      responses:
+        "200":
+          description: Closed maintenance record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MaintenanceLog"
+
+  # ─── FUEL LOGS ────────────────────────────────────────────────────────────────
+  /fuel-logs:
+    get:
+      operationId: listFuelLogs
+      tags: [fuel-logs]
+      summary: List fuel logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: tripId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of fuel logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FuelLog"
+    post:
+      operationId: createFuelLog
+      tags: [fuel-logs]
+      summary: Record a fuel log entry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FuelLogInput"
+      responses:
+        "201":
+          description: Fuel log created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FuelLog"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── EXPENSES ─────────────────────────────────────────────────────────────────
+  /expenses:
+    get:
+      operationId: listExpenses
+      tags: [expenses]
+      summary: List expenses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleId
+          in: query
+          schema:
+            type: integer
+        - name: tripId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            $ref: "#/components/schemas/ExpenseType"
+      responses:
+        "200":
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expense"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Record an expense
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Expense created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expense"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ─── DASHBOARD ────────────────────────────────────────────────────────────────
+  /dashboard/kpis:
+    get:
+      operationId: getDashboardKpis
+      tags: [dashboard]
+      summary: Get dashboard KPI metrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: vehicleType
+          in: query
+          schema:
+            type: string
+        - name: region
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard KPIs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardKpis"
+
+  /dashboard/recent-trips:
+    get:
+      operationId: getRecentTrips
+      tags: [dashboard]
+      summary: Get recent trips for the dashboard live board
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Recent trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+
+  /dashboard/vehicle-status-summary:
+    get:
+      operationId: getVehicleStatusSummary
+      tags: [dashboard]
+      summary: Get vehicle status distribution for charts
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Vehicle status counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VehicleStatusSummary"
+
+  # ─── REPORTS ──────────────────────────────────────────────────────────────────
+  /reports/fleet-utilization:
+    get:
+      operationId: getFleetUtilization
+      tags: [reports]
+      summary: Fleet utilization report
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Fleet utilization metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FleetUtilizationReport"
+
+  /reports/fuel-efficiency:
+    get:
+      operationId: getFuelEfficiency
+      tags: [reports]
+      summary: Fuel efficiency report per vehicle
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Fuel efficiency metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FuelEfficiencyRecord"
+
+  /reports/operational-cost:
+    get:
+      operationId: getOperationalCost
+      tags: [reports]
+      summary: Operational cost report per vehicle (fuel + maintenance)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Operational costs per vehicle
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OperationalCostRecord"
+
+  /reports/vehicle-roi:
+    get:
+      operationId: getVehicleRoi
+      tags: [reports]
+      summary: Vehicle ROI report
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Vehicle ROI metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VehicleRoiRecord"
+
+  /reports/monthly-fuel-trend:
+    get:
+      operationId: getMonthlyFuelTrend
+      tags: [reports]
+      summary: Monthly fuel cost trend for charting
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Monthly fuel trends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyTrendRecord"
+
+  /reports/export/csv:
+    get:
+      operationId: exportCsv
+      tags: [reports]
+      summary: Export operational data as CSV
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [vehicles, drivers, trips, fuel-logs, expenses, maintenance]
+      responses:
+        "200":
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +1072,708 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+    # ─── ENUMS ──────────────────────────────────────────────────────────────────
+    VehicleStatus:
+      type: string
+      enum: [available, on_trip, in_shop, retired]
+
+    DriverStatus:
+      type: string
+      enum: [available, on_trip, off_duty, suspended]
+
+    TripStatus:
+      type: string
+      enum: [draft, dispatched, completed, cancelled]
+
+    MaintenanceStatus:
+      type: string
+      enum: [open, closed]
+
+    ExpenseType:
+      type: string
+      enum: [fuel, toll, maintenance, other]
+
+    UserRole:
+      type: string
+      enum: [fleet_manager, dispatcher, safety_officer, financial_analyst]
+
+    # ─── AUTH ───────────────────────────────────────────────────────────────────
+    LoginCredentials:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 1
+        role:
+          $ref: "#/components/schemas/UserRole"
+
+    RefreshTokenInput:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [accessToken, refreshToken, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      required: [id, email, fullName, role]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        fullName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        isActive:
+          type: boolean
+
+    # ─── VEHICLE ────────────────────────────────────────────────────────────────
+    Vehicle:
+      type: object
+      required: [id, registrationNumber, vehicleName, type, maxLoadCapacityKg, currentOdometerKm, acquisitionCost, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        registrationNumber:
+          type: string
+        vehicleName:
+          type: string
+        model:
+          type: ["string", "null"]
+        type:
+          type: string
+        maxLoadCapacityKg:
+          type: number
+        currentOdometerKm:
+          type: number
+        acquisitionCost:
+          type: number
+        region:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/VehicleStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    VehicleInput:
+      type: object
+      required: [registrationNumber, vehicleName, type, maxLoadCapacityKg, acquisitionCost]
+      properties:
+        registrationNumber:
+          type: string
+          minLength: 1
+        vehicleName:
+          type: string
+          minLength: 1
+        model:
+          type: string
+        type:
+          type: string
+        maxLoadCapacityKg:
+          type: number
+          minimum: 0.1
+        currentOdometerKm:
+          type: number
+          minimum: 0
+        acquisitionCost:
+          type: number
+          minimum: 0
+        region:
+          type: string
+
+    VehicleUpdate:
+      type: object
+      properties:
+        vehicleName:
+          type: string
+        model:
+          type: string
+        type:
+          type: string
+        maxLoadCapacityKg:
+          type: number
+          minimum: 0.1
+        currentOdometerKm:
+          type: number
+          minimum: 0
+        acquisitionCost:
+          type: number
+          minimum: 0
+        region:
+          type: string
+        status:
+          $ref: "#/components/schemas/VehicleStatus"
+
+    # ─── DRIVER ─────────────────────────────────────────────────────────────────
+    Driver:
+      type: object
+      required: [id, fullName, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber, safetyScore, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        licenseNumber:
+          type: string
+        licenseCategory:
+          type: string
+        licenseExpiryDate:
+          type: string
+          format: date
+        contactNumber:
+          type: string
+        safetyScore:
+          type: number
+        region:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+        tripCompletionRate:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DriverInput:
+      type: object
+      required: [fullName, licenseNumber, licenseCategory, licenseExpiryDate, contactNumber]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+        licenseNumber:
+          type: string
+          minLength: 1
+        licenseCategory:
+          type: string
+        licenseExpiryDate:
+          type: string
+          format: date
+        contactNumber:
+          type: string
+        safetyScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        region:
+          type: string
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+
+    DriverUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+        licenseNumber:
+          type: string
+        licenseCategory:
+          type: string
+        licenseExpiryDate:
+          type: string
+          format: date
+        contactNumber:
+          type: string
+        safetyScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        region:
+          type: string
+
+    DriverStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+
+    # ─── TRIP ───────────────────────────────────────────────────────────────────
+    Trip:
+      type: object
+      required: [id, sourceLocation, destinationLocation, cargoWeightKg, plannedDistanceKm, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        sourceLocation:
+          type: string
+        destinationLocation:
+          type: string
+        vehicleId:
+          type: ["integer", "null"]
+        driverId:
+          type: ["integer", "null"]
+        vehicleName:
+          type: ["string", "null"]
+        driverName:
+          type: ["string", "null"]
+        registrationNumber:
+          type: ["string", "null"]
+        cargoWeightKg:
+          type: number
+        plannedDistanceKm:
+          type: number
+        actualDistanceKm:
+          type: ["number", "null"]
+        plannedStartAt:
+          type: ["string", "null"]
+          format: date-time
+        dispatchedAt:
+          type: ["string", "null"]
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+        cancelledAt:
+          type: ["string", "null"]
+          format: date-time
+        finalOdometerKm:
+          type: ["number", "null"]
+        revenue:
+          type: ["number", "null"]
+        notes:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/TripStatus"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TripInput:
+      type: object
+      required: [sourceLocation, destinationLocation, vehicleId, driverId, cargoWeightKg, plannedDistanceKm]
+      properties:
+        sourceLocation:
+          type: string
+          minLength: 1
+        destinationLocation:
+          type: string
+          minLength: 1
+        vehicleId:
+          type: integer
+        driverId:
+          type: integer
+        cargoWeightKg:
+          type: number
+          minimum: 0
+        plannedDistanceKm:
+          type: number
+          minimum: 0.1
+        plannedStartAt:
+          type: string
+          format: date-time
+        revenue:
+          type: number
+          minimum: 0
+        notes:
+          type: string
+
+    TripUpdate:
+      type: object
+      properties:
+        sourceLocation:
+          type: string
+        destinationLocation:
+          type: string
+        vehicleId:
+          type: integer
+        driverId:
+          type: integer
+        cargoWeightKg:
+          type: number
+          minimum: 0
+        plannedDistanceKm:
+          type: number
+          minimum: 0.1
+        plannedStartAt:
+          type: string
+          format: date-time
+        revenue:
+          type: number
+          minimum: 0
+        notes:
+          type: string
+
+    TripCompletion:
+      type: object
+      required: [actualDistanceKm, finalOdometerKm]
+      properties:
+        actualDistanceKm:
+          type: number
+          minimum: 0
+        finalOdometerKm:
+          type: number
+          minimum: 0
+        revenue:
+          type: number
+          minimum: 0
+        notes:
+          type: string
+
+    # ─── MAINTENANCE ────────────────────────────────────────────────────────────
+    MaintenanceLog:
+      type: object
+      required: [id, vehicleId, title, maintenanceType, startDate, cost, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: ["string", "null"]
+        registrationNumber:
+          type: ["string", "null"]
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        maintenanceType:
+          type: string
+        startDate:
+          type: string
+          format: date
+        expectedEndDate:
+          type: ["string", "null"]
+          format: date
+        endDate:
+          type: ["string", "null"]
+          format: date
+        cost:
+          type: number
+        vendor:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/MaintenanceStatus"
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MaintenanceInput:
+      type: object
+      required: [vehicleId, title, maintenanceType, startDate, cost]
+      properties:
+        vehicleId:
+          type: integer
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        maintenanceType:
+          type: string
+        startDate:
+          type: string
+          format: date
+        expectedEndDate:
+          type: string
+          format: date
+        cost:
+          type: number
+          minimum: 0
+        vendor:
+          type: string
+        notes:
+          type: string
+
+    MaintenanceClose:
+      type: object
+      required: [endDate]
+      properties:
+        endDate:
+          type: string
+          format: date
+        notes:
+          type: string
+        finalCost:
+          type: number
+          minimum: 0
+
+    # ─── FUEL LOGS ──────────────────────────────────────────────────────────────
+    FuelLog:
+      type: object
+      required: [id, vehicleId, date, liters, cost, createdAt]
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: ["string", "null"]
+        registrationNumber:
+          type: ["string", "null"]
+        tripId:
+          type: ["integer", "null"]
+        date:
+          type: string
+          format: date
+        liters:
+          type: number
+        cost:
+          type: number
+        odometerReadingKm:
+          type: ["number", "null"]
+        fuelStation:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    FuelLogInput:
+      type: object
+      required: [vehicleId, date, liters, cost]
+      properties:
+        vehicleId:
+          type: integer
+        tripId:
+          type: integer
+        date:
+          type: string
+          format: date
+        liters:
+          type: number
+          minimum: 0.01
+        cost:
+          type: number
+          minimum: 0
+        odometerReadingKm:
+          type: number
+          minimum: 0
+        fuelStation:
+          type: string
+        notes:
+          type: string
+
+    # ─── EXPENSES ───────────────────────────────────────────────────────────────
+    Expense:
+      type: object
+      required: [id, vehicleId, expenseType, amount, date, createdAt]
+      properties:
+        id:
+          type: integer
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: ["string", "null"]
+        registrationNumber:
+          type: ["string", "null"]
+        tripId:
+          type: ["integer", "null"]
+        expenseType:
+          $ref: "#/components/schemas/ExpenseType"
+        amount:
+          type: number
+        date:
+          type: string
+          format: date
+        description:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ExpenseInput:
+      type: object
+      required: [vehicleId, expenseType, amount, date]
+      properties:
+        vehicleId:
+          type: integer
+        tripId:
+          type: integer
+        expenseType:
+          $ref: "#/components/schemas/ExpenseType"
+        amount:
+          type: number
+          minimum: 0
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+
+    # ─── DASHBOARD ──────────────────────────────────────────────────────────────
+    DashboardKpis:
+      type: object
+      required: [activeVehicles, availableVehicles, vehiclesInMaintenance, vehiclesOnTrip, retiredVehicles, activeTrips, pendingTrips, driversOnDuty, totalDrivers, availableDrivers, fleetUtilizationPct]
+      properties:
+        activeVehicles:
+          type: integer
+        availableVehicles:
+          type: integer
+        vehiclesInMaintenance:
+          type: integer
+        vehiclesOnTrip:
+          type: integer
+        retiredVehicles:
+          type: integer
+        activeTrips:
+          type: integer
+        pendingTrips:
+          type: integer
+        driversOnDuty:
+          type: integer
+        totalDrivers:
+          type: integer
+        availableDrivers:
+          type: integer
+        suspendedDrivers:
+          type: integer
+        fleetUtilizationPct:
+          type: number
+
+    VehicleStatusSummary:
+      type: object
+      required: [available, onTrip, inShop, retired]
+      properties:
+        available:
+          type: integer
+        onTrip:
+          type: integer
+        inShop:
+          type: integer
+        retired:
+          type: integer
+
+    # ─── REPORTS ────────────────────────────────────────────────────────────────
+    FleetUtilizationReport:
+      type: object
+      required: [utilizationPct, vehiclesOnTrip, totalActiveVehicles, byType, byRegion]
+      properties:
+        utilizationPct:
+          type: number
+        vehiclesOnTrip:
+          type: integer
+        totalActiveVehicles:
+          type: integer
+        byType:
+          type: array
+          items:
+            $ref: "#/components/schemas/UtilizationBreakdown"
+        byRegion:
+          type: array
+          items:
+            $ref: "#/components/schemas/UtilizationBreakdown"
+
+    UtilizationBreakdown:
+      type: object
+      required: [label, onTrip, total, pct]
+      properties:
+        label:
+          type: string
+        onTrip:
+          type: integer
+        total:
+          type: integer
+        pct:
+          type: number
+
+    FuelEfficiencyRecord:
+      type: object
+      required: [vehicleId, vehicleName, registrationNumber, totalDistanceKm, totalLiters, efficiencyKmPerLiter]
+      properties:
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: string
+        registrationNumber:
+          type: string
+        totalDistanceKm:
+          type: number
+        totalLiters:
+          type: number
+        efficiencyKmPerLiter:
+          type: number
+
+    OperationalCostRecord:
+      type: object
+      required: [vehicleId, vehicleName, registrationNumber, fuelCost, maintenanceCost, totalCost]
+      properties:
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: string
+        registrationNumber:
+          type: string
+        fuelCost:
+          type: number
+        maintenanceCost:
+          type: number
+        otherExpenses:
+          type: number
+        totalCost:
+          type: number
+
+    VehicleRoiRecord:
+      type: object
+      required: [vehicleId, vehicleName, registrationNumber, acquisitionCost, totalRevenue, totalCost, roi]
+      properties:
+        vehicleId:
+          type: integer
+        vehicleName:
+          type: string
+        registrationNumber:
+          type: string
+        acquisitionCost:
+          type: number
+        totalRevenue:
+          type: ["number", "null"]
+        totalCost:
+          type: number
+        roi:
+          type: ["number", "null"]
+        roiAvailable:
+          type: boolean
+
+    MonthlyTrendRecord:
+      type: object
+      required: [month, fuelCost, maintenanceCost, totalCost]
+      properties:
+        month:
+          type: string
+        fuelCost:
+          type: number
+        maintenanceCost:
+          type: number
+        totalCost:
+          type: number
