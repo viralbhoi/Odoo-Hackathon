@@ -33,12 +33,8 @@ const ALLOWED_ORIGINS: string[] = (process.env.CORS_ALLOWED_ORIGINS ?? "")
   .map((o) => o.trim())
   .filter(Boolean);
 
-// In development include the Replit proxy domain and localhost variants
+// In development include localhost variants
 if (process.env.NODE_ENV !== "production") {
-  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
-  if (replitDomain) {
-    ALLOWED_ORIGINS.push(`https://${replitDomain}`);
-  }
   ALLOWED_ORIGINS.push("http://localhost:5173", "http://localhost:23575", "http://127.0.0.1:5173");
 }
 
