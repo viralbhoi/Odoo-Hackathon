@@ -36,7 +36,7 @@ class TripController {
     });
 
     complete = asyncHandler(async (req: Request<IdParams>, res: Response) => {
-        const trip = await tripService.complete(req.params.id);
+        const trip = await tripService.complete(req.params.id, req.body);
 
         res.json({
             success: true,

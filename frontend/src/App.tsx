@@ -11,6 +11,7 @@ import Trips from '@/pages/trips';
 import Maintenance from '@/pages/maintenance';
 import FuelExpenses from '@/pages/fuel-expenses';
 import Analytics from '@/pages/analytics';
+import Settings from '@/pages/settings';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ function ProtectedRoutes() {
         <Route path="/maintenance" component={Maintenance} />
         <Route path="/fuel-expenses" component={FuelExpenses} />
         <Route path="/analytics" component={Analytics} />
+        <Route path="/settings" component={Settings} />
         <Route path="/">
           {() => {
             window.location.replace('/dashboard');

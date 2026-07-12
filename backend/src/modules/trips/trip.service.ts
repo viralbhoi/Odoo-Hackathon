@@ -3,7 +3,7 @@ import { DriverStatus, TripStatus, VehicleStatus } from "@prisma/client";
 import { prisma } from "../../common/config/prisma";
 import { AppError } from "../../common/errors/AppError";
 import tripRepository from "./trip.repository";
-import { CreateTripDto } from "./trip.validation";
+import { CreateTripDto, CompleteTripDto } from "./trip.validation";
 
 class TripService {
     async create(data: CreateTripDto) {
@@ -103,7 +103,7 @@ class TripService {
         return tripRepository.findById(id);
     }
 
-    async complete(id: string) {
+    async complete(id: string, data?: CompleteTripDto) {
         const trip = await tripRepository.findById(id);
 
         if (!trip) {
@@ -115,31 +115,27 @@ class TripService {
         }
 
         await prisma.$transaction(async (tx) => {
+            // Update vehicle: restore status + update odometer if provided
             await tx.vehicle.update({
-                where: {
-                    id: trip.vehicleId,
-                },
+                where: { id: trip.vehicleId },
                 data: {
                     status: VehicleStatus.AVAILABLE,
+                    ...(data?.endedOdometer ? { currentOdometer: data.endedOdometer } : {}),
                 },
             });
 
             await tx.driver.update({
-                where: {
-                    id: trip.driverId,
-                },
-                data: {
-                    status: DriverStatus.AVAILABLE,
-                },
+                where: { id: trip.driverId },
+                data: { status: DriverStatus.AVAILABLE },
             });
 
             await tx.trip.update({
-                where: {
-                    id,
-                },
+                where: { id },
                 data: {
                     status: TripStatus.COMPLETED,
                     completedAt: new Date(),
+                    ...(data?.actualDistance ? { actualDistance: data.actualDistance } : {}),
+                    ...(data?.endedOdometer ? { endedOdometer: data.endedOdometer } : {}),
                 },
             });
         });
