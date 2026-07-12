@@ -58,3 +58,4 @@ swagger-output.json
 
 # ESLint
 .eslintcache
+/generated/prisma
