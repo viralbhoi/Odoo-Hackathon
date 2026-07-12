@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { PaginationControls, usePagination } from "@/components/pagination-controls";
+import { useAuth, canDispatchTrips } from "@/context/auth-context";
 
 import { useToast } from "@/hooks/use-toast";
 import { formatNumber, formatDateTime } from "@/lib/utils";
@@ -48,6 +49,8 @@ type TripFormValues = z.infer<typeof tripSchema>;
 type CompleteFormValues = z.infer<typeof completeSchema>;
 
 export default function Trips() {
+  const { user } = useAuth();
+  const canDispatch = canDispatchTrips(user?.role);
   const { toast } = useToast();
   const [trips, setTrips] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -200,7 +203,8 @@ export default function Trips() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Dispatcher Form */}
+        {/* Dispatcher Form — only visible to ADMIN/FLEET_MANAGER */}
+        {canDispatch && (
         <div className="lg:col-span-4 space-y-6">
           <Card>
             <CardHeader className="border-b border-border/50">
@@ -291,9 +295,10 @@ export default function Trips() {
             </CardContent>
           </Card>
         </div>
+        )} {/* end canDispatch form */}
 
         {/* Live Board */}
-        <div className="lg:col-span-8">
+        <div className={canDispatch ? "lg:col-span-8" : "lg:col-span-12"}>
           <Card className="h-full flex flex-col">
           <CardHeader className="border-b border-border/50">
             <CardTitle>Deployment Log</CardTitle>
@@ -335,7 +340,7 @@ export default function Trips() {
                       </div>
 
                       <div className="flex gap-2 justify-end pt-4 border-t border-border/30">
-                        {status === "DRAFT" && (
+                        {canDispatch && status === "DRAFT" && (
                           <>
                             <Button variant="outline" size="sm" onClick={() => handleCancel(trip.id)} disabled={actionLoading === trip.id}>
                               Cancel
@@ -345,7 +350,7 @@ export default function Trips() {
                             </Button>
                           </>
                         )}
-                        {status === "DISPATCHED" && (
+                        {canDispatch && status === "DISPATCHED" && (
                           <>
                             <div className="flex-1 flex items-center text-xs text-blue-500">
                               Dispatched: {formatDateTime(trip.dispatchedAt)}

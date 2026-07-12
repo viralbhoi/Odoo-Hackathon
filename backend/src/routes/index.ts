@@ -10,6 +10,8 @@ import fuelRoutes from "../modules/fuel/fuel.routes";
 import expenseRoutes from "../modules/expenses/expense.routes";
 import dashboardRoutes from "../modules/dashboard/dashboard.routes";
 import reportsRoutes from "../modules/reports/reports.routes";
+import userRoutes from "../modules/users/user.routes";
+import driverAuthRoutes from "../modules/driver-auth/driver-auth.routes";
 
 const router = Router();
 
@@ -31,5 +33,8 @@ router.use("/fuel", fuelRoutes);
 router.use("/expenses", expenseRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/reports", reportsRoutes);
+router.use("/users", userRoutes);
+router.use("/driver-auth", driverAuthRoutes);
 
 export default router;
+

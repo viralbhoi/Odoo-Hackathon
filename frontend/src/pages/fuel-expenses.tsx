@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, formatCurrency, formatNumber } from "@/lib/utils";
 import { PaginationControls, usePagination } from "@/components/pagination-controls";
+import { useAuth, canManageFinancials } from "@/context/auth-context";
 
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,6 +48,8 @@ const expenseSchema = z.object({
 });
 
 export default function FuelExpenses() {
+  const { user } = useAuth();
+  const canLog = canManageFinancials(user?.role);
   const [fuelOpen, setFuelOpen] = useState(false);
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [fuelLogs, setFuelLogs] = useState<any[]>([]);
@@ -146,6 +149,7 @@ export default function FuelExpenses() {
 
         {/* ── Fuel Tab ── */}
         <TabsContent value="fuel" className="mt-6">
+          {canLog && (
           <div className="flex justify-end mb-4">
             <Dialog open={fuelOpen} onOpenChange={setFuelOpen}>
               <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Log Fuel</Button></DialogTrigger>
@@ -190,6 +194,7 @@ export default function FuelExpenses() {
               </DialogContent>
             </Dialog>
           </div>
+          )}
           <Card>
             <CardContent className="p-0">
               {fuelLoading ? <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-muted-foreground" /></div>
@@ -222,6 +227,7 @@ export default function FuelExpenses() {
 
         {/* ── Expenses Tab ── */}
         <TabsContent value="expenses" className="mt-6">
+          {canLog && (
           <div className="flex justify-end mb-4">
             <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}>
               <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Log Expense</Button></DialogTrigger>
@@ -272,6 +278,7 @@ export default function FuelExpenses() {
               </DialogContent>
             </Dialog>
           </div>
+          )}
           <Card>
             <CardContent className="p-0">
               {expLoading ? <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-muted-foreground" /></div>

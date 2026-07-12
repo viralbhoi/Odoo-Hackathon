@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/utils";
 import { PaginationControls, usePagination } from "@/components/pagination-controls";
+import { useAuth, canManageMaintenance } from "@/context/auth-context";
 
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +42,8 @@ const mntSchema = z.object({
 type MntFormValues = z.infer<typeof mntSchema>;
 
 export default function Maintenance() {
+  const { user } = useAuth();
+  const canLog = canManageMaintenance(user?.role);
   const [records, setRecords] = useState<any[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +126,8 @@ export default function Maintenance() {
       {/* Split layout: form left, log right — matches wireframe */}
       <div className="grid gap-6 lg:grid-cols-12">
 
-        {/* ── Left: Log Service Form ── */}
+        {/* ── Left: Log Service Form (ADMIN/FLEET_MANAGER only) ── */}
+        {canLog && (
         <Card className="lg:col-span-4">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="text-base">Log Service Record</CardTitle>
@@ -229,9 +233,10 @@ export default function Maintenance() {
             </Form>
           </CardContent>
         </Card>
+        )}
 
         {/* ── Right: Service Log Table ── */}
-        <Card className="lg:col-span-8">
+        <Card className={canLog ? "lg:col-span-8" : "lg:col-span-12"}>
           <CardHeader className="border-b border-border/50">
             <CardTitle className="text-base">Service Log</CardTitle>
           </CardHeader>
