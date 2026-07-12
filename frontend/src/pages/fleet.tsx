@@ -58,6 +58,7 @@ export default function Fleet() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [statusUpdating, setStatusUpdating] = useState<string | null>(null);
 
   const fetchVehicles = () => {
     setLoading(true);
@@ -87,6 +88,21 @@ export default function Fleet() {
     } else {
       toast({ title: "Error", description: res.message || "Registration failed", variant: "destructive" });
     }
+  };
+
+  const updateVehicleStatus = async (id: string, status: string) => {
+    setStatusUpdating(id);
+    const res = await apiFetch(`/vehicles/${id}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    if (res.success) {
+      toast({ title: "Status updated", description: `Vehicle marked as ${STATUS_LABELS[status] ?? status}` });
+      fetchVehicles();
+    } else {
+      toast({ title: "Error", description: res.message || "Update failed", variant: "destructive" });
+    }
+    setStatusUpdating(null);
   };
 
   // Client-side filtering
@@ -251,6 +267,7 @@ export default function Fleet() {
                   <TableHead className="text-right">Odometer</TableHead>
                   <TableHead className="text-right">Acq. Cost</TableHead>
                   <TableHead>Status</TableHead>
+                  {canAdd && <TableHead>Change Status</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -276,6 +293,24 @@ export default function Fleet() {
                           {STATUS_LABELS[status] ?? status}
                         </Badge>
                       </TableCell>
+                      {canAdd && (
+                        <TableCell>
+                          <Select
+                            value={status}
+                            onValueChange={(val) => updateVehicleStatus(v.id, val)}
+                            disabled={statusUpdating === v.id || status === "ON_TRIP"}
+                          >
+                            <SelectTrigger className="h-8 w-[130px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="AVAILABLE">Available</SelectItem>
+                              <SelectItem value="IN_SHOP">In Shop</SelectItem>
+                              <SelectItem value="RETIRED">Retired</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

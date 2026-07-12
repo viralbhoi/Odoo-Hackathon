@@ -11,7 +11,7 @@ export const createExpenseSchema = z
         // Accept 'title' or 'description' (frontend sends description)
         title: z.string().optional(),
         description: z.string().optional(),
-        amount: z.number().positive(),
+        amount: z.coerce.number().positive(),
         // Accept 'type' (backend) or 'expenseType' (frontend alias)
         type: z.union([expenseTypeEnum, expenseTypeLower]).optional(),
         expenseType: z.union([expenseTypeEnum, expenseTypeLower]).optional(),

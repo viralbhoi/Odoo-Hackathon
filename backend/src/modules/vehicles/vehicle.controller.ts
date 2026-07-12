@@ -45,11 +45,12 @@ class VehicleController {
 
     delete = asyncHandler(async (req: Request<IdParams>, res: Response) => {
         await vehicleService.delete(req.params.id);
+        res.json({ success: true, message: "Vehicle deleted successfully" });
+    });
 
-        res.json({
-            success: true,
-            message: "Vehicle deleted successfully",
-        });
+    updateStatus = asyncHandler(async (req: Request<IdParams>, res: Response) => {
+        const vehicle = await vehicleService.updateStatus(req.params.id, req.body.status);
+        res.json({ success: true, data: vehicle });
     });
 }
 

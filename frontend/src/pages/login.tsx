@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/auth-context";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,6 +20,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const { refetch, setUser } = useAuth();
   const [isPending, setIsPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -49,6 +51,15 @@ export default function Login() {
       const result = json.data ?? json;
       localStorage.setItem("transitops_token", result.accessToken);
       localStorage.setItem("transitops_user", JSON.stringify(result.user));
+      // Set user instantly in AuthProvider — eliminates race condition where
+      // Shell sees user=null and redirects back to /login
+      setUser({
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email,
+        role: result.user.role,
+        status: result.user.status,
+      });
       setLocation("/dashboard");
     } catch (error: any) {
       toast({
@@ -61,12 +72,21 @@ export default function Login() {
     }
   };
 
+  const DEMO_PASSWORD = "Admin@123";
+
   const demoAccounts = [
     { email: "admin@transitops.com", label: "Admin", color: "text-purple-400" },
     { email: "fleet@transitops.com", label: "Fleet Manager", color: "text-primary" },
     { email: "safety@transitops.com", label: "Safety Officer", color: "text-rose-400" },
     { email: "finance@transitops.com", label: "Financial Analyst", color: "text-emerald-400" },
   ];
+
+  const loginAsDemo = (email: string) => {
+    form.setValue("email", email);
+    form.setValue("password", DEMO_PASSWORD);
+    // submit after a tick so form state is updated
+    setTimeout(() => form.handleSubmit(onSubmit)(), 50);
+  };
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -200,7 +220,7 @@ export default function Login() {
               <button
                 key={acc.email}
                 type="button"
-                onClick={() => form.setValue("email", acc.email)}
+                onClick={() => loginAsDemo(acc.email)}
                 className="w-full text-left hover:bg-muted/80 rounded px-1 py-0.5 transition-colors"
               >
                 <span className={acc.color}>{acc.email}</span>
