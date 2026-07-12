@@ -12,6 +12,7 @@ interface AuthContextValue {
   user: UserInfo | null;
   isLoading: boolean;
   refetch: () => void;
+  setUser: (u: UserInfo | null) => void;
   logout: () => void;
 }
 
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   isLoading: true,
   refetch: () => {},
+  setUser: () => {},
   logout: () => {},
 });
 
@@ -48,8 +50,16 @@ export const canManageSafety = (role?: string) =>
 export const canManageUsers = (role?: string) => role === "ADMIN";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Immediately read cached user from localStorage to prevent flash-to-login on refresh
+  const cachedUser = (() => {
+    try {
+      const raw = localStorage.getItem("transitops_user");
+      return raw ? (JSON.parse(raw) as UserInfo) : null;
+    } catch { return null; }
+  })();
+
+  const [user, setUser] = useState<UserInfo | null>(cachedUser);
+  const [isLoading, setIsLoading] = useState(!cachedUser); // skip loading spinner if cache hit
 
   const fetchUser = () => {
     const token = localStorage.getItem("transitops_token");
@@ -85,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, refetch: fetchUser, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, refetch: fetchUser, setUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

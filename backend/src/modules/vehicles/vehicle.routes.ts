@@ -14,6 +14,8 @@ router.get("/:id", vehicleController.getById);
 
 router.post("/", authorize("ADMIN", "FLEET_MANAGER"), vehicleController.create);
 
+router.patch("/:id/status", authorize("ADMIN", "FLEET_MANAGER"), vehicleController.updateStatus);
+
 router.delete("/:id", authorize("ADMIN"), vehicleController.delete);
 
 export default router;

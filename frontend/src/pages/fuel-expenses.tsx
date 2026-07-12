@@ -89,14 +89,16 @@ export default function FuelExpenses() {
   });
 
   const onFuelSubmit = async (data: z.infer<typeof fuelSchema>) => {
+    const odometerVal = data.odometerReadingKm && data.odometerReadingKm > 0
+      ? data.odometerReadingKm
+      : undefined;           // backend will use vehicle.currentOdometer when undefined
     const res = await apiFetch("/fuel", {
       method: "POST",
       body: JSON.stringify({
         vehicleId: data.vehicleId,
         liters: data.liters,
         cost: data.cost,
-        odometer: data.odometerReadingKm ?? 0,
-        odometerReadingKm: data.odometerReadingKm ?? 0,
+        odometer: odometerVal,
         fuelStation: data.fuelStation,
         date: data.date,
       }),

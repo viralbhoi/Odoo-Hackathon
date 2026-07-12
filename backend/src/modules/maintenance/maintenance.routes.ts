@@ -19,7 +19,7 @@ router.post(
 
 router.patch(
     "/:id/complete",
-    authorize("FLEET_MANAGER"),
+    authorize("ADMIN", "FLEET_MANAGER"),
     maintenanceController.complete,
 );
 

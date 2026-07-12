@@ -59,9 +59,15 @@ function AccessCell({ value }: { value: string }) {
 
 export default function Settings() {
   const { toast } = useToast();
-  const [depotName, setDepotName] = useState("Gandhinagar Depot GJ4");
-  const [currency, setCurrency] = useState("INR");
-  const [distanceUnit, setDistanceUnit] = useState("km");
+
+  // Read persisted settings from localStorage on mount
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem("transitops_settings") || "{}"); } catch { return {}; }
+  })();
+
+  const [depotName, setDepotName] = useState(saved.depotName ?? "Gandhinagar Depot GJ4");
+  const [currency, setCurrency] = useState(saved.currency ?? "INR");
+  const [distanceUnit, setDistanceUnit] = useState(saved.distanceUnit ?? "km");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {

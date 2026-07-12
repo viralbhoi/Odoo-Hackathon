@@ -15,13 +15,13 @@ router.post("/", authorize("ADMIN", "FLEET_MANAGER"), tripController.create);
 
 router.patch(
     "/:id/dispatch",
-    authorize("FLEET_MANAGER"),
+    authorize("ADMIN", "FLEET_MANAGER"),
     tripController.dispatch,
 );
 
 router.patch(
     "/:id/complete",
-    authorize("FLEET_MANAGER"),
+    authorize("ADMIN", "FLEET_MANAGER"),
     tripController.complete,
 );
 
