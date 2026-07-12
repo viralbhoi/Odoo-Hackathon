@@ -1,0 +1,2064 @@
+Yes — below is a detailed FRD you can directly use for your hackathon solution, tailored to the TransitOps problem statement and expanded into implementation-ready detail. The platform is intended to digitize transport operations across vehicles, drivers, trips, maintenance, fuel, expenses, and analytics while enforcing strict operational rules and visibility needs.
+
+FRD overview
+Project Name: TransitOps – Smart Transport Operations Platform.
+
+Purpose: Build a centralized transport operations system that replaces spreadsheets and manual logs with a role-based platform for fleet control, dispatch, compliance, maintenance tracking, operational costing, and reporting.
+
+Hackathon context: The solution must be practical enough to demonstrate end-to-end lifecycle coverage within 8 hours, so the FRD should prioritize core workflows, clear validations, automation of status changes, and analytics that prove business value.
+
+Business problem
+Many logistics teams still manage vehicle allocation, dispatch planning, driver compliance, maintenance, and expenses manually, which causes scheduling conflicts, vehicle underutilization, missed maintenance, expired-license risk, inaccurate cost records, and poor operational visibility. TransitOps addresses this by providing one system for vehicle registration, driver records, trip execution, maintenance state control, fuel logging, and operational analytics.
+
+Goals
+Centralize transport operations data in one application.
+
+Prevent invalid dispatches through automated business-rule validation.
+
+Improve visibility through KPIs like active vehicles, active trips, drivers on duty, maintenance counts, and fleet utilization.
+
+Track operating cost using fuel and maintenance data and expose financial insights such as operational cost, fuel efficiency, and vehicle ROI.
+
+Success criteria
+Users can create, view, update, and manage vehicles and drivers without data duplication or invalid states.
+
+Dispatch only allows compliant drivers and eligible vehicles.
+
+Status transitions happen automatically on dispatch, completion, cancellation, and maintenance events.
+
+Dashboard and reports reflect near-real-time operational data.
+
+User roles
+The platform serves four target users defined in the statement, each with distinct responsibilities.
+
+Role	Primary responsibility	Key permissions
+Fleet Manager	Manages fleet assets, lifecycle, maintenance, and efficiency.
+Full vehicle CRUD, maintenance management, dashboard access, reports.
+Driver	Creates or participates in trip operations and active delivery monitoring.
+Limited trip visibility, own assignments, trip updates as allowed by design.
+Safety Officer	Tracks compliance, license validity, and safety score.
+View/manage driver compliance data, suspension controls, license expiry alerts.
+Financial Analyst	Reviews fuel, maintenance, operational expense, and profitability.
+Expense logs, fuel logs, analytics, export access.
+Scope
+In scope
+The mandatory functional scope includes authentication with RBAC, dashboard KPIs, vehicle registry, driver management, trip management, maintenance, fuel and expense management, and reports/analytics. Mandatory deliverables also include responsive UI, CRUD for vehicles and drivers, trip validations, automatic status transitions, maintenance workflow, dashboard, and charts.
+
+Optional / bonus scope
+Bonus areas mentioned are PDF export, email reminders for expiring licenses, vehicle document management, search/filter/sort improvements, and dark mode. For an 8-hour hackathon, these should be treated as stretch goals unless your team velocity is very strong.
+
+Functional requirements
+1. Authentication and access control
+The system must support secure login with email and password, role-based access control, and application access only for authenticated users.
+
+Functional details
+User enters email and password.
+
+System validates credentials.
+
+System identifies assigned role.
+
+System displays role-appropriate navigation and restricted modules.
+
+Unauthenticated users are redirected to login.
+
+Unauthorized users cannot access restricted actions even by URL manipulation.
+
+Suggested screens
+Login page.
+
+Optional user profile menu.
+
+Unauthorized / access denied page.
+
+Validation rules
+Email required.
+
+Password required.
+
+Invalid credentials show clear error.
+
+Session persistence should continue while logged in.
+
+2. Dashboard
+The dashboard must show operational KPIs including Active Vehicles, Available Vehicles, Vehicles in Maintenance, Active Trips, Pending Trips, Drivers On Duty, and Fleet Utilization (%), with filters by vehicle type, status, and region.
+
+Dashboard widgets
+Total vehicles.
+
+Available vehicles.
+
+Vehicles on trip.
+
+Vehicles in maintenance.
+
+Total drivers.
+
+Drivers available / on trip / suspended.
+
+Active trips.
+
+Draft or pending trips.
+
+Fleet utilization percentage.
+
+Recent maintenance records.
+
+Latest fuel or expense logs.
+
+KPI formulas
+Fleet Utilization (%) = 
+Vehicles On Trip
+Total Active Vehicles
+×
+100
+Total Active Vehicles
+Vehicles On Trip
+​
+ ×100.
+
+Active Vehicles should exclude retired vehicles if your implementation uses active inventory logic.
+
+Filters
+Vehicle type.
+
+Vehicle status.
+
+Region.
+
+Date range, if implemented as an enhancement.
+
+3. Vehicle registry
+The vehicle registry must maintain vehicles with Registration Number, Vehicle Name/Model, Type, Maximum Load Capacity, Odometer, Acquisition Cost, and Status.
+
+Vehicle master fields
+Vehicle ID.
+
+Registration Number.
+
+Vehicle Name / Model.
+
+Vehicle Type.
+
+Maximum Load Capacity.
+
+Current Odometer.
+
+Acquisition Cost.
+
+Region.
+
+Status: Available, On Trip, In Shop, Retired.
+
+Created At / Updated At.
+
+Functional behavior
+Add new vehicle.
+
+Edit vehicle details.
+
+View vehicle list and detail page.
+
+Search by registration or model.
+
+Filter by type, region, or status.
+
+Retire a vehicle.
+
+Prevent invalid dispatch participation based on status.
+
+Validations
+Registration number must be unique.
+
+Maximum load capacity must be positive.
+
+Odometer cannot be negative.
+
+Acquisition cost cannot be negative.
+
+Retired vehicles cannot be selected in dispatch.
+
+4. Driver management
+Driver management must store Name, License Number, License Category, License Expiry Date, Contact Number, Safety Score, and Status.
+
+Driver master fields
+Driver ID.
+
+Full Name.
+
+License Number.
+
+License Category.
+
+License Expiry Date.
+
+Contact Number.
+
+Safety Score.
+
+Region / base location.
+
+Status: Available, On Trip, Off Duty, Suspended.
+
+Created At / Updated At.
+
+Functional behavior
+Add driver.
+
+Edit driver profile.
+
+View compliance state.
+
+Update status.
+
+Suspend driver.
+
+List expiring licenses.
+
+Filter by status, category, region.
+
+Validations
+License number should be unique in system design, even though only vehicle uniqueness is explicitly mandatory.
+
+Expired-license drivers cannot be assigned to trips.
+
+Suspended drivers cannot be assigned to trips.
+
+Safety score should stay within defined range, for example 0–100.
+
+5. Trip management
+Trip creation must support source, destination, available vehicle, available driver, cargo weight, and planned distance, with lifecycle states Draft, Dispatched, Completed, and Cancelled.
+
+Trip fields
+Trip ID.
+
+Source.
+
+Destination.
+
+Assigned Vehicle ID.
+
+Assigned Driver ID.
+
+Cargo Weight.
+
+Planned Distance.
+
+Actual Distance.
+
+Dispatch Date/Time.
+
+Completion Date/Time.
+
+Revenue, if included for ROI support.
+
+Status: Draft, Dispatched, Completed, Cancelled.
+
+Notes.
+
+Trip workflow
+User creates trip in Draft state.
+
+User selects only eligible vehicle and driver.
+
+System validates capacity and availability.
+
+User dispatches trip.
+
+System changes vehicle and driver status to On Trip automatically.
+
+On completion, user enters final odometer and fuel data if linked to completion flow.
+
+System marks trip Completed and returns vehicle and driver to Available.
+
+If cancelled after dispatch, system restores resource availability.
+
+Core validations
+In Shop or Retired vehicles must not appear in dispatch selection.
+
+Vehicle already On Trip cannot be assigned again.
+
+Driver already On Trip cannot be assigned again.
+
+Expired or Suspended drivers cannot be assigned.
+
+Cargo weight must not exceed vehicle maximum load capacity.
+
+Planned distance must be positive.
+
+Source and destination cannot be empty.
+
+6. Maintenance management
+The system must support maintenance records and automatically move the vehicle into In Shop status when an active maintenance record is created.
+
+Maintenance fields
+Maintenance ID.
+
+Vehicle ID.
+
+Maintenance Type.
+
+Description.
+
+Start Date.
+
+Expected End Date.
+
+End Date.
+
+Cost.
+
+Vendor / workshop.
+
+Status: Open, Closed.
+
+Notes.
+
+Functional behavior
+Create maintenance record.
+
+Mark maintenance as active/open.
+
+Automatically set vehicle status to In Shop.
+
+Hide that vehicle from trip assignment.
+
+Close maintenance.
+
+Restore vehicle status to Available unless vehicle is Retired.
+
+Validations
+Only non-retired vehicles can enter maintenance workflow logically.
+
+Open maintenance should block trip dispatch.
+
+End date cannot be earlier than start date.
+
+7. Fuel and expense management
+The system must record fuel logs and additional expenses such as tolls and maintenance-related costs, and compute total operational cost per vehicle using fuel plus maintenance.
+
+Fuel log fields
+Fuel Log ID.
+
+Vehicle ID.
+
+Trip ID, optional.
+
+Date.
+
+Liters.
+
+Cost.
+
+Odometer at refill, optional.
+
+Fuel station / remarks.
+
+Expense fields
+Expense ID.
+
+Vehicle ID.
+
+Trip ID, optional.
+
+Expense Type: Toll, Repair, Maintenance, Other.
+
+Amount.
+
+Date.
+
+Description.
+
+Functional behavior
+Add fuel entry.
+
+Add expense entry.
+
+View cost history by vehicle.
+
+View trip-associated spending.
+
+Aggregate total fuel cost, maintenance cost, and operational cost.
+
+Core calculations
+Operational Cost per Vehicle = Fuel Cost + Maintenance Cost.
+
+If other expenses are included in your design, document whether they are part of total operational cost or shown separately; the statement explicitly mentions Fuel + Maintenance for automatic computation.
+
+8. Reports and analytics
+The analytics module must display Fuel Efficiency, Fleet Utilization, Operational Cost, and Vehicle ROI, and support CSV export while PDF export is optional.
+
+Metrics
+Fuel Efficiency = Distance / Fuel consumed.
+
+Fleet Utilization = On-trip vehicles / total active vehicles.
+
+Operational Cost = Fuel + Maintenance.
+
+Vehicle ROI = 
+Revenue - (Maintenance + Fuel)
+Acquisition Cost
+Acquisition Cost
+Revenue - (Maintenance + Fuel)
+​
+ .
+
+Suggested charts
+Vehicle status distribution.
+
+Trip status distribution.
+
+Monthly fuel cost trend.
+
+Maintenance cost by vehicle.
+
+Top cost-consuming vehicles.
+
+License expiry risk list.
+
+Fleet utilization trend by region or type.
+
+Export support
+CSV export is mandatory in the statement.
+
+PDF export is optional / bonus.
+
+Business rules
+These rules are explicitly mandatory and should be highlighted strongly in the FRD because they will likely be judged during evaluation.
+
+Rule	Requirement
+Unique vehicle registration	Registration number must be unique.
+Dispatch eligibility	Retired or In Shop vehicles must never appear in dispatch selection.
+Driver compliance	Drivers with expired licenses or Suspended status cannot be assigned.
+Resource exclusivity	Vehicle or driver already On Trip cannot be assigned to another trip.
+Capacity validation	Cargo weight must not exceed max load capacity.
+Auto status on dispatch	Dispatch sets both vehicle and driver to On Trip.
+Auto status on completion	Completing a trip returns both to Available.
+Auto restore on cancellation	Cancelling a dispatched trip restores both to Available.
+Auto status on maintenance create	Active maintenance sets vehicle to In Shop.
+Auto restore after maintenance close	Closing maintenance restores vehicle to Available unless retired.
+Example workflow
+The statement provides a reference workflow using vehicle “Van-05” and driver “Alex,” where a 450 kg trip is allowed against 500 kg capacity, both statuses shift to On Trip, completion restores availability, maintenance moves the vehicle to In Shop, and reports update after trip and fuel logging. This workflow should be demo-ready in the final product because it proves vehicle registration, driver registration, dispatch validation, automated transitions, maintenance automation, and reporting in one coherent story.
+
+Data model
+The expected database entities listed are Users, Roles, Vehicles, Drivers, Trips, Maintenance Logs, Fuel Logs, and Expenses.
+
+Suggested entity relationships
+One Role can map to many Users.
+
+One Vehicle can have many Trips.
+
+One Driver can have many Trips.
+
+One Vehicle can have many Maintenance Logs.
+
+One Vehicle can have many Fuel Logs.
+
+One Vehicle can have many Expenses.
+
+One Trip may optionally relate to many Fuel Logs or Expenses if tracked at trip level.
+
+Suggested schema detail
+Users
+id
+
+name
+
+email
+
+password_hash
+
+role_id
+
+created_at
+
+Roles
+id
+
+role_name
+
+Vehicles
+id
+
+registration_number
+
+model_name
+
+type
+
+max_load_capacity
+
+odometer
+
+acquisition_cost
+
+region
+
+status
+
+is_retired
+
+created_at
+
+updated_at
+
+Drivers
+id
+
+name
+
+license_number
+
+license_category
+
+license_expiry_date
+
+contact_number
+
+safety_score
+
+region
+
+status
+
+created_at
+
+updated_at
+
+Trips
+id
+
+source
+
+destination
+
+vehicle_id
+
+driver_id
+
+cargo_weight
+
+planned_distance
+
+actual_distance
+
+revenue
+
+status
+
+dispatched_at
+
+completed_at
+
+cancelled_at
+
+created_by
+
+created_at
+
+MaintenanceLogs
+id
+
+vehicle_id
+
+maintenance_type
+
+description
+
+start_date
+
+expected_end_date
+
+end_date
+
+cost
+
+status
+
+created_at
+
+FuelLogs
+id
+
+vehicle_id
+
+trip_id
+
+liters
+
+cost
+
+date
+
+odometer_reading
+
+created_at
+
+Expenses
+id
+
+vehicle_id
+
+trip_id
+
+expense_type
+
+amount
+
+date
+
+description
+
+created_at
+
+Non-functional requirements
+The problem statement requires a responsive web interface, and bonus scope includes dark mode, so usability and portability matter to the design.
+
+Key non-functional requirements
+Responsive UI for desktop and tablet/mobile usage.
+
+Secure authentication and protected routes.
+
+Fast validations for dispatch actions.
+
+Clean dashboards and readable charts.
+
+Data consistency in status transitions.
+
+Error messaging for invalid business actions.
+
+Simple learning curve for hackathon judges to test quickly.
+
+Module-wise acceptance criteria
+Authentication
+User with valid email/password can log in.
+
+Unauthorized access to dashboard or modules is blocked.
+
+Role-based menu visibility works.
+
+Vehicles
+New vehicle can be created with mandatory details.
+
+Duplicate registration numbers are rejected.
+
+Retired/In Shop vehicles cannot be dispatched.
+
+Drivers
+Driver can be created and updated.
+
+Expired or suspended driver cannot be assigned to trip.
+
+Trips
+Draft trip can be created.
+
+Dispatch succeeds only when all rules pass.
+
+Dispatch changes resource statuses to On Trip.
+
+Completion or cancellation restores statuses correctly.
+
+Maintenance
+Open maintenance changes vehicle to In Shop.
+
+Closed maintenance restores status appropriately.
+
+Fuel / expenses
+Fuel and expense records can be added.
+
+Operational cost updates using fuel + maintenance values.
+
+Analytics
+KPI cards display required operational values.
+
+CSV export works.
+
+ROI, fleet utilization, and fuel efficiency are visible.
+
+Recommended MVP for 8 hours
+For an 8-hour hackathon, the smartest MVP is to fully nail the mandatory flows instead of partially building every bonus idea. The most judge-friendly MVP is authentication, dashboard, vehicles, drivers, trip dispatch validation, maintenance status automation, fuel/expense entry, and 3–4 core analytics widgets with CSV export.
+
+Priority order
+Authentication + RBAC.
+
+Vehicle and Driver CRUD.
+
+Trip creation + dispatch validations.
+
+Automatic status transitions.
+
+Maintenance workflow.
+
+Fuel and expense logging.
+
+Dashboard KPIs + charts.
+
+CSV export.
+
+Bonus features only if time remains.
+
+UI screen list
+A practical screen set for implementation would be:
+
+Login page.
+
+Dashboard page with KPI cards, filters, and charts.
+
+Vehicle list page.
+
+Add/Edit vehicle form.
+
+Driver list page.
+
+Add/Edit driver form.
+
+Trip list page.
+
+Create/View trip page.
+
+Maintenance log page.
+
+Fuel log page.
+
+Expense page.
+
+Reports page with CSV export.
+
+Risks and edge cases
+A strong FRD should also mention edge conditions because these often become demo-breaking bugs.
+
+Important edge cases
+Dispatch attempted with a vehicle that changed to In Shop in another session.
+
+Driver license expires today; define whether current date counts as valid until end-of-day.
+
+Completing trip without actual distance or odometer update.
+
+Cancelling draft vs cancelling dispatched trip should behave differently.
+
+Retired vehicle with open maintenance.
+
+Fuel logs entered without trip reference.
+
+ROI unavailable when revenue is not tracked; in that case mark ROI as “Not enough data” unless revenue field is included.
+
+Suggested implementation notes
+Since this is a hackathon, the architecture should favor speed plus strong demo behavior. A full-stack CRUD app with a normalized database, guarded APIs, transactional updates for dispatch/completion, and seeded sample data would best support the statement’s workflow-heavy nature.
+
+Suggested technical approach
+Backend: REST APIs for auth, vehicles, drivers, trips, maintenance, fuel, expenses, reports.
+
+Database: relational schema with foreign keys and status enums.
+
+Frontend: dashboard-first UX with validation-heavy forms.
+
+Seed data: demo fleet, drivers, trips, maintenance logs, and expense entries.
+
+Demo mode: prepare one “happy path” based on the provided example workflow.
+
+Deliverables mapping
+The final solution should clearly map to mandatory deliverables: responsive web interface, RBAC authentication, CRUD for vehicles and drivers, trip validations, automatic transitions, maintenance workflow, fuel and expense tracking, KPI dashboard, and analytics visualizations. Bonus items like PDF export, email reminders, vehicle document management, advanced search/filter/sort, and dark mode can be shown as completed extras only if core flow is already stable.
+
+Detailed FRD structure you can submit
+You can format your final FRD in this exact order:
+
+Project title.
+
+Business context.
+
+Problem statement.
+
+Objectives.
+
+User roles.
+
+Scope in / out.
+
+Assumptions.
+
+Functional requirements by module.
+
+Business rules.
+
+Workflow scenarios.
+
+Data model/entities.
+
+Reports and KPIs.
+
+Non-functional requirements.
+
+Acceptance criteria.
+
+MVP scope for hackathon.
+
+Risks and dependencies.
+
+If you want, next I can convert this into a professional submission-ready FRD format with:
+
+proper document headings,
+
+table-based requirements,
+
+user stories,
+
+acceptance criteria,
+
+and a clean copy-paste DOC/PDF style version.
+
+look now i want trd doc in depth so think smartly, logically and create me the doc
+here is the tech stack which i have decided for it
+react + typescript for frontend , for backend i have to make it much stronger
+Backend
+Node.js
+Express.js
+TypeScript
+
+Database
+PostgreSQL
+Prisma ORM
+
+Authentication
+JWT
+Refresh Tokens
+Google OAuth
+
+Performance
+Redis Cache
+Redis Sessions
+Async Processing
+BullMQ
+Redis
+
+Documentation
+Swagger
+
+Security
+Helmet
+CORS
+Rate Limiting
+Zod Validation
+
+Monitoring
+Pino Logging
+Sentry
+
+Below is a detailed TRD (Technical Requirements Document) for TransitOps based on the Odoo problem statement and your chosen stack. It is written to be practical for implementation, strong enough for judging, and structured so you can directly convert it into a submission doc or internal build guide.
+
+TRD overview
+Project Name: TransitOps – Smart Transport Operations Platform.
+
+Objective: Build a secure, scalable, role-based transport operations platform that digitizes vehicle management, driver management, dispatch, maintenance, fuel logging, expense tracking, and operational analytics while enforcing business-critical validations and automated lifecycle transitions.
+
+Chosen Stack: React + TypeScript frontend; Node.js, Express.js, and TypeScript backend; PostgreSQL with Prisma ORM; JWT and refresh token auth with Google OAuth; Redis, BullMQ, Swagger, Zod, Helmet, CORS, rate limiting, Pino, and Sentry for platform hardening.
+
+System goals
+TransitOps must solve the operational issues described in the problem statement: scheduling conflicts, underutilized vehicles, missed maintenance, expired license risk, inaccurate expense tracking, and low operational visibility. Technically, this means the backend must become the source of truth for status management, validation, and reporting logic rather than leaving business control to the frontend.
+
+Technical goals
+Enforce all dispatch and lifecycle rules server-side.
+
+Support RBAC for Fleet Manager, Driver, Safety Officer, and Financial Analyst.
+
+Ensure transactional consistency for trip dispatch, completion, cancellation, and maintenance updates.
+
+Provide fast dashboard reads through aggregation and caching.
+
+Expose documented APIs through Swagger.
+
+Support future production hardening without major redesign.
+
+Architecture
+TransitOps should use a modular monolith architecture for the hackathon. This is the fastest way to ship strong domain separation while keeping deployment and development simple.
+
+High-level architecture
+Frontend: React + TypeScript SPA.
+
+API server: Node.js + Express.js + TypeScript.
+
+Database: PostgreSQL via Prisma ORM.
+
+Cache/session/queues: Redis.
+
+Background jobs: BullMQ using Redis.
+
+Auth: JWT access token, refresh token rotation, Google OAuth login option.
+
+Observability: Pino for structured logging, Sentry for exception and performance tracking.
+
+API docs: Swagger/OpenAPI.
+
+Validation/security: Zod, Helmet, CORS, rate limiting.
+
+Architectural style
+Use feature-based modules instead of a purely layered folder structure. This fits the domain better and keeps controllers, services, validators, routes, and repositories grouped by bounded functionality.
+
+Suggested backend modules:
+
+auth
+
+users
+
+roles
+
+vehicles
+
+drivers
+
+trips
+
+maintenance
+
+fuel-logs
+
+expenses
+
+dashboard
+
+reports
+
+notifications
+
+audit
+
+Functional-to-technical mapping
+The problem statement defines authentication, dashboard, vehicles, drivers, trips, maintenance, fuel/expense management, and analytics as mandatory scope. Each of these must map to its own backend module and API boundary to keep the codebase clean and extensible.
+
+Functional module	Technical module	Core backend responsibility
+Authentication	auth	Login, token issuance, refresh flow, OAuth, RBAC context.
+Dashboard	dashboard	KPI aggregation, filtering, caching.
+Vehicle Registry	vehicles	CRUD, uniqueness, status rules, availability filtering.
+Driver Management	drivers	CRUD, license checks, status checks, compliance logic.
+Trip Management	trips	Draft/dispatch/complete/cancel flow, transactional state changes.
+Maintenance	maintenance	Open/close maintenance, vehicle lockout, cost integration.
+Fuel & Expenses	fuel-logs, expenses	Operational cost tracking, trip/vehicle cost association.
+Reports & Analytics	reports	Efficiency, ROI, export, historical summaries.
+Frontend technical requirements
+The frontend should be built as a React SPA using TypeScript and role-aware routing. The UI must be responsive because the problem statement explicitly requires a responsive web interface.
+
+Frontend architecture
+React + TypeScript.
+
+React Router for protected and role-based routes.
+
+State management with Zustand or Redux Toolkit; Zustand is faster for hackathon speed.
+
+React Query/TanStack Query for API fetching, caching, pagination, and mutation invalidation.
+
+Form handling with React Hook Form + Zod resolver.
+
+UI library optional: shadcn/ui or Material UI; shadcn/ui gives faster control and cleaner modern UX.
+
+Charting: Recharts or Chart.js for KPI and analytics views.
+
+Axios or Fetch wrapper with token refresh interceptor.
+
+Frontend pages
+Login / OAuth callback.
+
+Dashboard.
+
+Vehicles list / create / edit / detail.
+
+Drivers list / create / edit / detail.
+
+Trips list / create / detail / lifecycle update.
+
+Maintenance logs list / create / close.
+
+Fuel logs list / create.
+
+Expenses list / create.
+
+Reports / analytics / CSV export.
+
+Profile / access denied / not found.
+
+Frontend non-functional needs
+Optimistic UI only where safe; avoid optimistic status mutation for dispatch-critical operations.
+
+Client-side validation must mirror server rules but never replace them.
+
+Token refresh should happen silently.
+
+Error boundaries and consistent toast/error banner system should be present.
+
+Role-based menu visibility should come from backend claims or /me endpoint.
+
+Backend technical requirements
+The backend must be stronger than the frontend because all critical business rules must be enforced centrally. This includes dispatch eligibility, uniqueness, status transitions, maintenance lockouts, and reporting consistency.
+
+Backend responsibilities
+Provide secure REST APIs.
+
+Validate all incoming payloads with Zod.
+
+Execute business logic in service layer.
+
+Use Prisma for database interaction.
+
+Use PostgreSQL constraints plus app-level validation for correctness.
+
+Use Redis for cache and job coordination.
+
+Publish job events for reminders and async analytics refresh.
+
+Emit structured logs and error traces.
+
+Suggested backend layers
+Route layer: Express routes, middleware composition.
+
+Controller layer: Request/response handling only.
+
+Service layer: Core domain logic.
+
+Repository/data layer: Prisma queries and transactions.
+
+Validation layer: Zod schemas.
+
+Middleware: auth, role checks, error handling, request logging, rate limiting.
+
+Infrastructure: Redis, BullMQ, logger, Swagger, Sentry.
+
+Suggested backend folder structure
+text
+src/
+  app/
+    server.ts
+    app.ts
+  config/
+  common/
+    errors/
+    middleware/
+    utils/
+    constants/
+  modules/
+    auth/
+    users/
+    roles/
+    vehicles/
+    drivers/
+    trips/
+    maintenance/
+    fuel-logs/
+    expenses/
+    dashboard/
+    reports/
+    notifications/
+    audit/
+  prisma/
+  docs/
+Database design
+The expected entities in the statement are Users, Roles, Vehicles, Drivers, Trips, Maintenance Logs, Fuel Logs, and Expenses. Your PostgreSQL schema should preserve these core entities and add technical tables for auth, sessions, audit, and async jobs support.
+
+Core entities
+roles
+
+users
+
+user_sessions
+
+vehicles
+
+drivers
+
+trips
+
+maintenance_logs
+
+fuel_logs
+
+expenses
+
+audit_logs
+
+refresh_tokens or auth_sessions
+
+notification_jobs or reminder_events
+
+Enum design
+Use PostgreSQL enums or Prisma enums for consistency.
+
+RoleEnum
+FLEET_MANAGER
+
+DRIVER
+
+SAFETY_OFFICER
+
+FINANCIAL_ANALYST
+
+VehicleStatus
+AVAILABLE
+
+ON_TRIP
+
+IN_SHOP
+
+RETIRED.
+
+DriverStatus
+AVAILABLE
+
+ON_TRIP
+
+OFF_DUTY
+
+SUSPENDED.
+
+TripStatus
+DRAFT
+
+DISPATCHED
+
+COMPLETED
+
+CANCELLED.
+
+MaintenanceStatus
+OPEN
+
+CLOSED
+
+ExpenseType
+FUEL
+
+TOLL
+
+MAINTENANCE
+
+OTHER
+
+Detailed schema requirements
+roles
+id: UUID / CUID
+
+name: unique enum/string
+
+description
+
+created_at
+
+users
+id
+
+full_name
+
+email unique
+
+password_hash nullable for OAuth-only users
+
+google_id nullable unique
+
+role_id FK
+
+is_active
+
+last_login_at
+
+created_at
+
+updated_at
+
+user_sessions / refresh_tokens
+id
+
+user_id FK
+
+refresh_token_hash
+
+device_info
+
+ip_address
+
+expires_at
+
+revoked_at
+
+created_at
+
+vehicles
+id
+
+registration_number unique.
+
+vehicle_name
+
+model
+
+type
+
+max_load_capacity_kg
+
+current_odometer_km
+
+acquisition_cost
+
+region
+
+status
+
+created_at
+
+updated_at
+
+drivers
+id
+
+full_name
+
+license_number unique
+
+license_category
+
+license_expiry_date
+
+contact_number
+
+safety_score
+
+region
+
+status
+
+created_at
+
+updated_at
+
+trips
+id
+
+source_location
+
+destination_location
+
+vehicle_id FK
+
+driver_id FK
+
+cargo_weight_kg
+
+planned_distance_km
+
+actual_distance_km nullable
+
+planned_start_at
+
+dispatched_at nullable
+
+completed_at nullable
+
+cancelled_at nullable
+
+final_odometer_km nullable
+
+revenue nullable
+
+status
+
+created_by_user_id FK
+
+updated_by_user_id FK nullable
+
+created_at
+
+updated_at
+
+maintenance_logs
+id
+
+vehicle_id FK
+
+title
+
+description
+
+maintenance_type
+
+start_date
+
+expected_end_date nullable
+
+end_date nullable
+
+cost
+
+vendor nullable
+
+status
+
+created_by_user_id FK
+
+created_at
+
+updated_at
+
+fuel_logs
+id
+
+vehicle_id FK
+
+trip_id nullable FK
+
+date
+
+liters
+
+cost
+
+odometer_reading_km nullable
+
+fuel_station nullable
+
+notes nullable
+
+created_by_user_id FK
+
+created_at
+
+expenses
+id
+
+vehicle_id FK
+
+trip_id nullable FK
+
+expense_type
+
+amount
+
+date
+
+description
+
+created_by_user_id FK
+
+created_at
+
+audit_logs
+id
+
+actor_user_id FK
+
+entity_type
+
+entity_id
+
+action
+
+before_json
+
+after_json
+
+metadata_json
+
+created_at
+
+Database constraints
+A strong backend should not rely only on service logic. Database-level constraints should block impossible or invalid states wherever practical.
+
+Required constraints
+Unique index on vehicle registration number.
+
+Unique index on driver license number.
+
+Check cargo_weight_kg >= 0.
+
+Check max_load_capacity_kg > 0.
+
+Check current_odometer_km >= 0.
+
+Check acquisition_cost >= 0.
+
+Check liters > 0.
+
+Check cost >= 0.
+
+Check amount >= 0.
+
+Check maintenance end date cannot precede start date.
+
+Foreign key constraints on all ownership relations.
+
+Optional partial indexes for active status queries.
+
+Recommended indexes
+vehicles(status, type, region)
+
+drivers(status, license_expiry_date, region)
+
+trips(status, dispatched_at, vehicle_id, driver_id)
+
+maintenance_logs(vehicle_id, status)
+
+fuel_logs(vehicle_id, date)
+
+expenses(vehicle_id, date)
+
+users(email)
+
+refresh_tokens(user_id, expires_at)
+
+API design
+The API should follow versioned REST conventions. Because Swagger is part of your stack, endpoint clarity matters both for implementation and demonstration.
+
+Base path
+/api/v1
+
+Auth endpoints
+POST /auth/login
+
+POST /auth/refresh
+
+POST /auth/logout
+
+GET /auth/google
+
+GET /auth/google/callback
+
+GET /auth/me
+
+Vehicle endpoints
+GET /vehicles
+
+POST /vehicles
+
+GET /vehicles/:id
+
+PATCH /vehicles/:id
+
+PATCH /vehicles/:id/retire
+
+GET /vehicles/available/dispatch-options
+
+Driver endpoints
+GET /drivers
+
+POST /drivers
+
+GET /drivers/:id
+
+PATCH /drivers/:id
+
+PATCH /drivers/:id/suspend
+
+GET /drivers/available/dispatch-options
+
+GET /drivers/license-expiry
+
+Trip endpoints
+GET /trips
+
+POST /trips
+
+GET /trips/:id
+
+PATCH /trips/:id
+
+POST /trips/:id/dispatch
+
+POST /trips/:id/complete
+
+POST /trips/:id/cancel
+
+Maintenance endpoints
+GET /maintenance
+
+POST /maintenance
+
+GET /maintenance/:id
+
+POST /maintenance/:id/close
+
+Fuel endpoints
+GET /fuel-logs
+
+POST /fuel-logs
+
+Expense endpoints
+GET /expenses
+
+POST /expenses
+
+Dashboard/report endpoints
+GET /dashboard/kpis
+
+GET /dashboard/charts
+
+GET /reports/fleet-utilization
+
+GET /reports/fuel-efficiency
+
+GET /reports/operational-cost
+
+GET /reports/vehicle-roi
+
+GET /reports/export/csv
+
+Authentication design
+The statement requires secure email/password login, RBAC, and authenticated-only access. Your selected stack extends this with JWT, refresh tokens, and Google OAuth, which makes the design more production-grade.
+
+Auth model
+Access token: short-lived JWT, for example 15 minutes.
+
+Refresh token: long-lived, stored hashed in DB or session table.
+
+Refresh token rotation on every refresh.
+
+Revocation support on logout.
+
+Optional HTTP-only secure cookie for refresh token; this is safer than exposing refresh tokens to JS.
+
+Access token can be sent in Authorization header.
+
+Google OAuth
+Allow login via Google for faster onboarding.
+
+Map Google profile email to user record.
+
+If user does not exist, create with default role only if business policy allows; safer approach is invite-only role mapping.
+
+Auth middleware
+authenticate(): verifies access token.
+
+authorize(...roles): role-based gate.
+
+optionalAuth(): for public health/docs endpoints if needed.
+
+Session strategy
+Because your stack includes Redis Sessions, you can use Redis as a session/revocation store even with JWT. This hybrid model supports:
+
+refresh token family tracking
+
+blacklist/revocation
+
+device sessions
+
+force logout
+
+replay detection
+
+RBAC model
+The system must support the four roles from the problem statement. Backend authorization should be endpoint-level plus action-level.
+
+Action	Fleet Manager	Driver	Safety Officer	Financial Analyst
+Manage vehicles	Yes	No	Read only optional	Read only optional
+Manage drivers	Yes	No	Yes	Read only optional
+Create trip	Yes	Optional	No	No
+Dispatch trip	Yes	Optional if allowed	No	No
+Complete/cancel trip	Yes	Limited	No	No
+Open/close maintenance	Yes	No	No	No
+Add fuel logs	Yes	Yes optional	No	Yes optional
+Add expenses	Yes	No	No	Yes
+View analytics	Yes	Limited	Compliance view	Yes
+Export CSV	Yes	No	Optional	Yes
+For hackathon simplicity, keep Drivers with restricted self-service access rather than full operator control unless the UI explicitly needs it.
+
+Business rule enforcement
+The problem statement’s mandatory rules are the heart of the system and must be executed atomically in backend services.
+
+Mandatory rule implementations
+Vehicle registration number unique: enforce at DB unique index and service pre-check.
+
+Retired/In Shop vehicle excluded from dispatch: dispatch query must filter and final dispatch transaction must recheck status.
+
+Expired/Suspended driver cannot be assigned: validate against current date and status.
+
+On Trip resource cannot be reused: query and transaction recheck must both exist.
+
+Cargo weight cannot exceed capacity: validate against selected vehicle capacity.
+
+Dispatch updates both driver and vehicle to On Trip in one transaction.
+
+Trip completion returns both to Available in one transaction.
+
+Trip cancellation restores both to Available if previously dispatched.
+
+Opening maintenance sets vehicle to In Shop.
+
+Closing maintenance restores vehicle to Available unless Retired.
+
+Transaction design
+Use prisma.$transaction() for:
+
+dispatch trip
+
+complete trip
+
+cancel trip
+
+open maintenance
+
+close maintenance
+
+This prevents partial state updates such as a trip moving to Dispatched while the vehicle remains Available.
+
+Validation strategy
+Zod should be used for request validation at the API boundary. This keeps controllers clean and gives typed parsing.
+
+Validation layers
+Request validation: Zod schemas on body, params, query.
+
+Business validation: service-level checks.
+
+Database validation: constraints and unique indexes.
+
+Example validation needs
+Create vehicle schema.
+
+Update vehicle schema.
+
+Create driver schema.
+
+Create trip schema.
+
+Dispatch trip schema.
+
+Complete trip schema with final odometer and actual distance.
+
+Maintenance create/close schema.
+
+Fuel log schema.
+
+Expense schema.
+
+Dashboard filter schema.
+
+Caching strategy
+Redis should be used selectively for read-heavy endpoints, not for mutable transactional state. Dashboard KPIs and report summaries are the best candidates.
+
+Cache candidates
+/dashboard/kpis
+
+/dashboard/charts
+
+/reports/*
+
+dispatch option lists for vehicles/drivers, with short TTL
+
+Cache invalidation triggers
+vehicle create/update/status change
+
+driver create/update/status/license change
+
+trip dispatch/complete/cancel
+
+maintenance open/close
+
+fuel log create
+
+expense create
+
+Cache rules
+Use small TTL for hackathon simplicity, for example 30–120 seconds.
+
+For critical freshness, invalidate actively after mutations.
+
+Never trust cache for dispatch write validation.
+
+Async processing
+BullMQ should handle tasks that are not required to complete inside the user request lifecycle.
+
+Async jobs
+License expiry reminders, matching the bonus feature in the statement.
+
+Scheduled maintenance reminders.
+
+Report precomputation or heavy CSV generation.
+
+Notification fanout.
+
+Audit/event archiving.
+
+Daily KPI snapshot generation.
+
+Queue design
+Queues:
+
+notifications
+
+reports
+
+maintenance-reminders
+
+license-reminders
+
+Jobs should include retry policies, dead-letter handling strategy, and idempotency keys where necessary.
+
+Reporting and analytics design
+The statement requires Fuel Efficiency, Fleet Utilization, Operational Cost, and Vehicle ROI. Reports should be derived consistently from trips, fuel logs, maintenance logs, and expenses.
+
+Metric definitions
+Fuel Efficiency = total distance / total fuel liters.
+
+Fleet Utilization = vehicles on trip / total active vehicles.
+
+Operational Cost = fuel cost + maintenance cost.
+
+Vehicle ROI = 
+Revenue - (Maintenance + Fuel)
+Acquisition Cost
+Acquisition Cost
+Revenue - (Maintenance + Fuel)
+​
+ .
+
+Report implementation notes
+If revenue is unavailable for some vehicles, ROI should return null or “insufficient data”.
+
+Support region/type/date filtering where possible.
+
+CSV export should serialize normalized, readable headers because CSV export is explicitly required.
+
+Security requirements
+Your chosen security stack is strong, but it needs coherent configuration.
+
+Required controls
+Helmet for HTTP security headers.
+
+Strict CORS allowlist for frontend domain.
+
+Rate limiting on auth routes and public endpoints.
+
+Password hashing with bcrypt or argon2; argon2 is preferred if available.
+
+JWT signing with strong secret and expiry.
+
+Refresh token hashing at rest.
+
+Input validation with Zod.
+
+Central error handler that avoids leaking internals.
+
+SQL injection resistance through Prisma parameterization.
+
+Optional CSRF protection if refresh token uses cookies.
+
+Security-sensitive routes
+/auth/login
+
+/auth/refresh
+
+/auth/google/callback
+
+/reports/export/csv
+
+trip lifecycle mutation endpoints
+
+Audit requirements
+Critical actions should produce audit logs:
+
+login/logout
+
+vehicle creation/update/retire
+
+driver creation/update/suspend
+
+trip dispatch/complete/cancel
+
+maintenance open/close
+
+expense creation
+
+role changes
+
+Monitoring and observability
+Pino and Sentry should give enough visibility to debug demo issues and support future production maturity.
+
+Logging
+Use Pino structured logs with:
+
+request_id
+
+user_id
+
+role
+
+route
+
+action
+
+duration_ms
+
+status_code
+
+error_code
+
+Error tracking
+Sentry should capture:
+
+unhandled exceptions
+
+transaction failures
+
+auth failures
+
+slow API traces
+
+frontend runtime crashes if added client-side
+
+Health endpoints
+GET /health/live
+
+GET /health/ready
+
+Readiness should validate DB and Redis connectivity.
+
+Swagger requirements
+Swagger should document all request/response schemas, auth mechanisms, and error models. This is especially helpful in hackathons because judges and teammates can inspect APIs quickly.
+
+Swagger coverage
+auth flows
+
+RBAC-protected endpoints
+
+all CRUD operations
+
+trip lifecycle endpoints
+
+dashboard/report endpoints
+
+standard error responses
+
+bearer auth definition
+
+Error handling model
+Use a centralized error architecture with custom domain errors.
+
+Suggested error categories
+ValidationError
+
+AuthenticationError
+
+AuthorizationError
+
+ConflictError
+
+NotFoundError
+
+BusinessRuleViolationError
+
+ExternalServiceError
+
+InternalServerError
+
+Example business errors
+VEHICLE_NOT_AVAILABLE_FOR_DISPATCH
+
+DRIVER_LICENSE_EXPIRED
+
+DRIVER_SUSPENDED
+
+CARGO_EXCEEDS_CAPACITY
+
+TRIP_ALREADY_COMPLETED
+
+MAINTENANCE_ALREADY_OPEN
+
+Performance requirements
+Because this is a dashboard-driven app, performance matters most in filtered lists and KPI endpoints.
+
+Performance targets
+Auth response under 500 ms in normal conditions.
+
+List endpoints under 800 ms for small-to-medium datasets.
+
+Dashboard KPI response under 500 ms with cache hit.
+
+Dispatch lifecycle mutations under 1 second.
+
+CSV export should stream or generate efficiently for larger result sets.
+
+Performance techniques
+Pagination on list endpoints.
+
+Query projection instead of overfetching.
+
+Aggregation queries with indexes.
+
+Redis cache for repeated dashboard/report reads.
+
+Async jobs for reminders and heavy export generation.
+
+Deployment design
+A practical deployment plan should reflect your stack without overengineering.
+
+Environments
+local
+
+development
+
+production/demo
+
+Services
+frontend app
+
+backend API
+
+PostgreSQL
+
+Redis
+
+optional worker process for BullMQ
+
+Deployment recommendation
+For a hackathon, deploy:
+
+Frontend: Vercel or Netlify.
+
+Backend: Render, Railway, or Fly.io.
+
+PostgreSQL: Neon, Supabase Postgres, or Railway Postgres.
+
+Redis: Upstash or Redis Cloud.
+
+Worker: same platform as backend if supported.
+
+DevOps and configuration
+Environment variables
+PORT
+
+NODE_ENV
+
+DATABASE_URL
+
+REDIS_URL
+
+JWT_ACCESS_SECRET
+
+JWT_REFRESH_SECRET
+
+JWT_ACCESS_EXPIRES_IN
+
+JWT_REFRESH_EXPIRES_IN
+
+GOOGLE_CLIENT_ID
+
+GOOGLE_CLIENT_SECRET
+
+GOOGLE_CALLBACK_URL
+
+CORS_ORIGIN
+
+SENTRY_DSN
+
+LOG_LEVEL
+
+Scripts
+dev
+
+build
+
+start
+
+prisma:generate
+
+prisma:migrate
+
+prisma:seed
+
+worker:dev
+
+lint
+
+test
+
+swagger:generate
+
+Testing strategy
+Even in a hackathon, the most important modules deserve tests because dispatch and lifecycle bugs will be obvious.
+
+Testing levels
+Unit tests: business rule functions, calculators, validators.
+
+Integration tests: auth, trip dispatch/complete/cancel, maintenance open/close.
+
+API tests: protected routes, RBAC behavior.
+
+Frontend tests: critical form validation and route guarding if time permits.
+
+Highest-priority test scenarios
+duplicate vehicle registration rejected.
+
+retired vehicle excluded from dispatch.
+
+expired driver rejected.
+
+cargo above capacity rejected.
+
+successful dispatch changes all required statuses.
+
+successful completion restores statuses.
+
+maintenance open blocks dispatch.
+
+CSV export returns correct data.
+
+MVP technical cut
+Since the build window is 8 hours, the backend must prioritize correctness over breadth. The fastest strong TRD-backed MVP is a modular monolith with hardened auth, transactional trip lifecycle, maintenance integration, basic analytics, and CSV export.
+
+Must-build
+JWT auth + refresh.
+
+RBAC middleware.
+
+Vehicle CRUD.
+
+Driver CRUD.
+
+Trip create/dispatch/complete/cancel.
+
+Maintenance create/close.
+
+Fuel log + expense create/list.
+
+Dashboard KPIs.
+
+CSV export.
+
+Swagger docs.
+
+Pino logs.
+
+Redis caching for dashboard only.
+
+Nice-to-have
+Google OAuth.
+
+BullMQ reminders.
+
+Sentry.
+
+advanced report filters
+
+dark mode
+
+PDF export.
+
+Recommended implementation order
+Setup Express + TypeScript base.
+
+Prisma schema + PostgreSQL migration.
+
+Auth + RBAC middleware.
+
+Vehicle and driver modules.
+
+Trip transactional lifecycle.
+
+Maintenance status integration.
+
+Fuel/expense modules.
+
+Dashboard/report queries.
+
+Redis cache.
+
+Swagger.
+
+Logging + Sentry.
+
+OAuth / BullMQ only if time remains.
+
+TRD conclusion block
+TransitOps should be implemented as a secure, modular, transaction-safe transport operations platform where the backend owns validation, lifecycle consistency, reporting logic, and role-based control. Your chosen stack is strong enough not only for the hackathon demo but also for presenting the solution as a production-minded architecture, especially because it combines PostgreSQL consistency, Prisma developer speed, JWT-based auth, Redis-backed performance, BullMQ async capability, and observability/security tooling in one coherent system.
