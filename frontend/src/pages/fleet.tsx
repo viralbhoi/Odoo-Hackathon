@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import { PaginationControls, usePagination } from "@/components/pagination-controls";
+import { useAuth, canManageVehicles } from "@/context/auth-context";
 
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -48,6 +49,8 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Fleet() {
+  const { user } = useAuth();
+  const canAdd = canManageVehicles(user?.role);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -107,6 +110,7 @@ export default function Fleet() {
           <h2 className="text-3xl font-bold tracking-tight">Fleet Registry</h2>
           <p className="text-muted-foreground">Manage vehicles, capacity, and operational status.</p>
         </div>
+        {canAdd && (
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Add Vehicle</Button>
@@ -182,6 +186,7 @@ export default function Fleet() {
             </Form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Filters row — matches wireframe */}

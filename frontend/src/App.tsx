@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Route, Switch, Router as WouterRouter } from 'wouter';
 
+import { AuthProvider } from '@/context/auth-context';
 import { Shell } from '@/components/shell';
 import Login from '@/pages/login';
 import Dashboard from '@/pages/dashboard';
@@ -12,6 +13,8 @@ import Maintenance from '@/pages/maintenance';
 import FuelExpenses from '@/pages/fuel-expenses';
 import Analytics from '@/pages/analytics';
 import Settings from '@/pages/settings';
+import UserManagement from '@/pages/users';
+import DriverPortal from '@/pages/driver-portal';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +37,7 @@ function ProtectedRoutes() {
         <Route path="/fuel-expenses" component={FuelExpenses} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/settings" component={Settings} />
+        <Route path="/users" component={UserManagement} />
         <Route path="/">
           {() => {
             window.location.replace('/dashboard');
@@ -55,6 +59,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/driver-portal" component={DriverPortal} />
       <Route component={ProtectedRoutes} />
     </Switch>
   );
@@ -64,7 +69,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-        <Router />
+        <AuthProvider>
+          <Router />
+        </AuthProvider>
       </WouterRouter>
       <Toaster />
     </QueryClientProvider>

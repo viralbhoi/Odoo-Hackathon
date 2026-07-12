@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { cn, formatDate } from "@/lib/utils";
 import { PaginationControls, usePagination } from "@/components/pagination-controls";
+import { useAuth, canManageDrivers, canManageSafety } from "@/context/auth-context";
 
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -46,6 +47,9 @@ type DriverFormValues = z.infer<typeof driverSchema>;
 const TOGGLEABLE_STATUSES = ["AVAILABLE", "OFF_DUTY", "SUSPENDED"];
 
 export default function Drivers() {
+  const { user } = useAuth();
+  const canAdd = canManageDrivers(user?.role);
+  const canToggle = canManageSafety(user?.role) || canManageDrivers(user?.role);
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [drivers, setDrivers] = useState<any[]>([]);
@@ -132,6 +136,7 @@ export default function Drivers() {
           <p className="text-muted-foreground">Manage operators, licenses, and safety compliance.</p>
         </div>
 
+        {canAdd && (
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Add Driver</Button>
@@ -211,6 +216,7 @@ export default function Drivers() {
             </Form>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <Card>
@@ -295,9 +301,9 @@ export default function Drivers() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        {canToggle ? (
+                        {canToggle && status !== "ON_TRIP" ? (
                           <div className="flex gap-1 justify-end flex-wrap">
-                            {otherStatuses.map((s) => (
+                            {TOGGLEABLE_STATUSES.filter((s) => s !== status).map((s) => (
                               <Button
                                 key={s}
                                 size="sm"
@@ -310,8 +316,10 @@ export default function Drivers() {
                               </Button>
                             ))}
                           </div>
-                        ) : (
+                        ) : status === "ON_TRIP" ? (
                           <span className="text-xs text-blue-500 font-mono">On Trip</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </TableCell>
                     </TableRow>

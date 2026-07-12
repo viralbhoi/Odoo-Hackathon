@@ -1,17 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Truck, Users, MapPin, Wrench, Fuel, BarChart3, LogOut, Loader2, Settings, Search } from "lucide-react";
+import { LayoutDashboard, Truck, Users, UserCog, MapPin, Wrench, Fuel, BarChart3, LogOut, Loader2, Settings, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
-
-interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useState } from "react";
+import { useAuth, canManageUsers } from "@/context/auth-context";
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Admin",
@@ -30,40 +24,14 @@ const ROLE_COLORS: Record<string, string> = {
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<UserInfo | null>(null);
+  const { user, isLoading, logout } = useAuth();
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    const token = localStorage.getItem("transitops_token");
-    if (!token) {
-      setLocation("/login");
-      return;
-    }
-
-    fetch("/api/v1/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        const json = await res.json();
-        const userData = json.data ?? json;
-        setUser(userData);
-        setIsLoading(false);
-      })
-      .catch(() => {
-        localStorage.removeItem("transitops_token");
-        localStorage.removeItem("transitops_user");
-        setLocation("/login");
-      });
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("transitops_token");
-    localStorage.removeItem("transitops_user");
+  // Redirect if not authenticated
+  if (!isLoading && !user) {
     setLocation("/login");
-    toast({ title: "Signed out successfully" });
-  };
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -73,6 +41,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const handleLogout = () => {
+    logout();
+    setLocation("/login");
+    toast({ title: "Signed out successfully" });
+  };
+
   const nav = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/fleet", label: "Fleet", icon: Truck },
@@ -81,6 +55,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
     { href: "/maintenance", label: "Maintenance", icon: Wrench },
     { href: "/fuel-expenses", label: "Fuel & Expenses", icon: Fuel },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    // Admin-only: User Management
+    ...(canManageUsers(user?.role)
+      ? [{ href: "/users", label: "User Management", icon: UserCog }]
+      : []),
     { href: "/settings", label: "Settings", icon: Settings },
   ];
 
