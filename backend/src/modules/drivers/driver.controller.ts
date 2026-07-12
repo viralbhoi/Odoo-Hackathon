@@ -84,6 +84,17 @@ class DriverController {
         });
     });
 
+    updateStatus = asyncHandler(async (req: Request<IdParams>, res: Response) => {
+        const { status } = req.body;
+        const allowed = ["AVAILABLE", "OFF_DUTY", "SUSPENDED"];
+        if (!allowed.includes(status)) {
+            res.status(400).json({ success: false, message: `Status must be one of: ${allowed.join(", ")}` });
+            return;
+        }
+        const driver = await driverService.updateStatus(req.params.id, status);
+        res.json({ success: true, data: driver });
+    });
+
     delete = asyncHandler(async (req: Request<IdParams>, res: Response) => {
         await driverService.delete(req.params.id);
 

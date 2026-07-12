@@ -9,4 +9,11 @@ export const createTripSchema = z.object({
     driverId: z.string(),
 });
 
+export const completeTripSchema = z.object({
+    actualDistance: z.number().nonnegative().optional(),
+    endedOdometer: z.number().nonnegative().optional(),
+    notes: z.string().optional(),
+});
+
 export type CreateTripDto = z.infer<typeof createTripSchema>;
+export type CompleteTripDto = z.infer<typeof completeTripSchema>;

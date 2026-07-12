@@ -61,6 +61,11 @@ class DriverService {
         return driverRepository.reinstate(id);
     }
 
+    async updateStatus(id: string, status: string) {
+        await this.getById(id);
+        return driverRepository.update(id, { status: status as any });
+    }
+
     async delete(id: string) {
         await this.getById(id);
 

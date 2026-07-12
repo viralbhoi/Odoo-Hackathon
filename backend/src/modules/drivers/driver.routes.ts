@@ -38,6 +38,12 @@ router.patch(
     driverController.reinstate,
 );
 
+router.patch(
+    "/:id/status",
+    authorize("ADMIN", "FLEET_MANAGER", "SAFETY_OFFICER"),
+    driverController.updateStatus,
+);
+
 router.delete("/:id", authorize("ADMIN"), driverController.delete);
 
 export default router;
