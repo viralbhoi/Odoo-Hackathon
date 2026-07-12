@@ -1,26 +1,31 @@
-import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-import docsRouter from "./docs";
-import authRouter from "./auth";
-import vehiclesRouter from "./vehicles";
-import driversRouter from "./drivers";
-import tripsRouter from "./trips";
-import maintenanceRouter from "./maintenance";
-import fuelExpensesRouter from "./fuel-expenses";
-import dashboardRouter from "./dashboard";
-import reportsRouter from "./reports";
+import { Router } from "express";
+import { prisma } from "../common/config/prisma";
 
-const router: IRouter = Router();
+import authRoutes from "../modules/auth/auth.routes";
+import vehicleRoutes from "../modules/vehicles/vehicle.routes";
+import driverRoutes from "../modules/drivers/driver.routes";
+import tripRoutes from "../modules/trips/trip.routes";
+import maintenanceRoutes from "../modules/maintenance/maintenance.routes";
+import fuelRoutes from "../modules/fuel/fuel.routes";
+import expenseRoutes from "../modules/expenses/expense.routes";
 
-router.use(healthRouter);
-router.use(docsRouter);   // public — no auth required
-router.use(authRouter);
-router.use(vehiclesRouter);
-router.use(driversRouter);
-router.use(tripsRouter);
-router.use(maintenanceRouter);
-router.use(fuelExpensesRouter);
-router.use(dashboardRouter);
-router.use(reportsRouter);
+const router = Router();
+
+router.get("/", async (_, res) => {
+    await prisma.$queryRaw`SELECT 1`;
+
+    res.json({
+        success: true,
+        message: "TransitOps API Running 🚛",
+    });
+});
+
+router.use("/auth", authRoutes);
+router.use("/vehicles", vehicleRoutes);
+router.use("/drivers", driverRoutes);
+router.use("/trips", tripRoutes);
+router.use("/maintenance", maintenanceRoutes);
+router.use("/fuel", fuelRoutes);
+router.use("/expenses", expenseRoutes);
 
 export default router;
