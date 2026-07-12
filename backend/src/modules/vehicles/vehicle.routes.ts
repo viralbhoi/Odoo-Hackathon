@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", vehicleController.getAll);
+router.get("/available", vehicleController.getAvailable);
 
 router.get("/:id", vehicleController.getById);
 

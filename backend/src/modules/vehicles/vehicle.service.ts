@@ -19,6 +19,10 @@ class VehicleService {
         return vehicleRepository.findAll();
     }
 
+    async getAvailable() {
+        return vehicleRepository.findAll({ status: "AVAILABLE" });
+    }
+
     async getById(id: string) {
         const vehicle = await vehicleRepository.findById(id);
 

@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/", driverController.getAll);
+router.get("/available", driverController.getAvailable);
 
 router.get("/:id", driverController.getById);
 

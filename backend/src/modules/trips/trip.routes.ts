@@ -25,4 +25,10 @@ router.patch(
     tripController.complete,
 );
 
+router.patch(
+    "/:id/cancel",
+    authorize("ADMIN", "FLEET_MANAGER"),
+    tripController.cancel,
+);
+
 export default router;

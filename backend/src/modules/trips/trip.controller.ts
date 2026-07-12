@@ -44,6 +44,16 @@ class TripController {
             data: trip,
         });
     });
+
+    cancel = asyncHandler(async (req: Request<IdParams>, res: Response) => {
+        const trip = await tripService.cancel(req.params.id);
+
+        res.json({
+            success: true,
+            message: "Trip cancelled successfully",
+            data: trip,
+        });
+    });
 }
 
 export default new TripController();

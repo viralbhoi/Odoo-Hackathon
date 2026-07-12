@@ -146,6 +146,31 @@ class TripService {
 
         return tripRepository.findById(id);
     }
+
+    async cancel(id: string) {
+        const trip = await tripRepository.findById(id);
+
+        if (!trip) throw new AppError(404, "Trip not found");
+
+        if (trip.status === TripStatus.COMPLETED || trip.status === TripStatus.CANCELLED) {
+            throw new AppError(400, "Trip already finished");
+        }
+
+        await prisma.$transaction(async (tx) => {
+            // Free vehicle and driver back to available if trip was dispatched
+            if (trip.status === TripStatus.DISPATCHED) {
+                await tx.vehicle.update({ where: { id: trip.vehicleId }, data: { status: VehicleStatus.AVAILABLE } });
+                await tx.driver.update({ where: { id: trip.driverId }, data: { status: DriverStatus.AVAILABLE } });
+            }
+
+            await tx.trip.update({
+                where: { id },
+                data: { status: TripStatus.CANCELLED },
+            });
+        });
+
+        return tripRepository.findById(id);
+    }
 }
 
 export default new TripService();

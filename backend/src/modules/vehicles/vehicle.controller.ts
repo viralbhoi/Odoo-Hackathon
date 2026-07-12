@@ -25,6 +25,15 @@ class VehicleController {
         });
     });
 
+    getAvailable = asyncHandler(async (_: Request, res: Response) => {
+        const vehicles = await vehicleService.getAvailable();
+
+        res.json({
+            success: true,
+            data: vehicles,
+        });
+    });
+
     getById = asyncHandler(async (req: Request<IdParams>, res: Response) => {
         const vehicle = await vehicleService.getById(req.params.id);
 

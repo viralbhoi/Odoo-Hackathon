@@ -4,9 +4,14 @@ import { prisma } from "../../common/config/prisma";
 class DriverRepository {
     findAll() {
         return prisma.driver.findMany({
-            orderBy: {
-                createdAt: "desc",
-            },
+            orderBy: { createdAt: "desc" },
+        });
+    }
+
+    findAvailable() {
+        return prisma.driver.findMany({
+            where: { status: DriverStatus.AVAILABLE },
+            orderBy: { createdAt: "desc" },
         });
     }
 

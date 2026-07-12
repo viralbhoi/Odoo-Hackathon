@@ -3,19 +3,15 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Truck, ShieldAlert, Activity, BarChart4 } from "lucide-react";
-import { useLogin } from "@workspace/api-client-react";
+import { Truck, ShieldAlert, Activity, BarChart4, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "@workspace/api-client-react";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
-  role: z.nativeEnum(UserRole).optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -23,33 +19,54 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
-  const loginMutation = useLogin();
+  const [isPending, setIsPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "fleet@transitops.io",
-      password: "password123",
-      role: UserRole.fleet_manager,
+      email: "fleet@transitops.com",
+      password: "Admin@123",
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate({ data }, {
-      onSuccess: (res) => {
-        localStorage.setItem('transitops_token', res.accessToken);
-        localStorage.setItem('transitops_user', JSON.stringify(res.user));
-        setLocation('/dashboard');
-      },
-      onError: (error) => {
-        toast({
-          title: "Login failed",
-          description: error.message || "Invalid credentials",
-          variant: "destructive",
-        });
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsPending(true);
+    try {
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.message || json.error || "Invalid credentials");
       }
-    });
+
+      // New backend returns { success: true, data: { accessToken, refreshToken, user } }
+      const result = json.data ?? json;
+      localStorage.setItem("transitops_token", result.accessToken);
+      localStorage.setItem("transitops_user", JSON.stringify(result.user));
+      setLocation("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPending(false);
+    }
   };
+
+  const demoAccounts = [
+    { email: "admin@transitops.com", label: "Admin", color: "text-purple-400" },
+    { email: "fleet@transitops.com", label: "Fleet Manager", color: "text-primary" },
+    { email: "safety@transitops.com", label: "Safety Officer", color: "text-rose-400" },
+    { email: "finance@transitops.com", label: "Financial Analyst", color: "text-emerald-400" },
+  ];
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -57,7 +74,7 @@ export default function Login() {
       <div className="hidden lg:flex w-1/2 bg-card border-r border-border p-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-10 grayscale mix-blend-luminosity"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
-        
+
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
             <div className="w-12 h-12 rounded bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.5)]">
@@ -71,7 +88,7 @@ export default function Login() {
 
           <div className="space-y-8">
             <h2 className="text-2xl font-semibold mb-6">Operational Roles</h2>
-            
+
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
                 <Truck className="w-5 h-5 text-primary" />
@@ -150,50 +167,47 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Security Key</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Clearance Level</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={UserRole.fleet_manager}>Fleet Manager</SelectItem>
-                        <SelectItem value={UserRole.dispatcher}>Dispatcher</SelectItem>
-                        <SelectItem value={UserRole.safety_officer}>Safety Officer</SelectItem>
-                        <SelectItem value={UserRole.financial_analyst}>Financial Analyst</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "Authenticating..." : "Initialize Session"}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? "Authenticating..." : "Initialize Session"}
               </Button>
             </form>
           </Form>
 
           <div className="p-4 bg-muted/50 rounded-md border border-border text-sm text-muted-foreground font-mono space-y-1">
             <p className="mb-2 text-foreground font-medium">Demo Accounts:</p>
-            <p><span className="text-primary">fleet@transitops.io</span> — Fleet Manager</p>
-            <p><span className="text-primary">dispatch@transitops.io</span> — Dispatcher</p>
-            <p><span className="text-primary">safety@transitops.io</span> — Safety Officer</p>
-            <p><span className="text-primary">finance@transitops.io</span> — Financial Analyst</p>
-            <p className="mt-2 text-xs opacity-60">All accounts: password123</p>
+            {demoAccounts.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                onClick={() => form.setValue("email", acc.email)}
+                className="w-full text-left hover:bg-muted/80 rounded px-1 py-0.5 transition-colors"
+              >
+                <span className={acc.color}>{acc.email}</span>
+                <span className="text-xs opacity-60 ml-2">— {acc.label}</span>
+              </button>
+            ))}
+            <p className="mt-2 text-xs opacity-60">All accounts: Admin@123</p>
           </div>
         </div>
       </div>

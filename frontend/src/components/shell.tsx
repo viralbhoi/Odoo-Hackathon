@@ -1,50 +1,57 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Truck, Users, MapPin, Wrench, Fuel, BarChart3, LogOut, Loader2 } from "lucide-react";
-import { useGetMe, useLogout } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
+interface UserInfo {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: user, isLoading, error } = useGetMe({ query: { retry: false } });
-  const logout = useLogout();
   const { toast } = useToast();
-  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserInfo | null>(null);
 
   useEffect(() => {
-    // Only redirect to login if we have definitely failed to auth
-    if (!isLoading) {
-      if (error) {
-        if (location !== '/login') {
-          setLocation('/login');
-        }
-      } else {
-        setIsReady(true);
-      }
+    const token = localStorage.getItem("transitops_token");
+    if (!token) {
+      setLocation("/login");
+      return;
     }
-  }, [isLoading, error, location, setLocation]);
+
+    // Verify token with /me endpoint
+    fetch("/api/v1/auth/me", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Unauthorized");
+        const json = await res.json();
+        // New backend returns { success: true, data: user }
+        const userData = json.data ?? json;
+        setUser(userData);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        localStorage.removeItem("transitops_token");
+        localStorage.removeItem("transitops_user");
+        setLocation("/login");
+      });
+  }, []);
 
   const handleLogout = () => {
-    logout.mutate(undefined, {
-      onSuccess: () => {
-        localStorage.removeItem('transitops_token');
-        localStorage.removeItem('transitops_user');
-        setLocation('/login');
-      },
-      onError: (err) => {
-        toast({ title: "Failed to logout", description: err.message, variant: "destructive" });
-        // Force cleanup anyway
-        localStorage.removeItem('transitops_token');
-        localStorage.removeItem('transitops_user');
-        setLocation('/login');
-      }
-    });
+    localStorage.removeItem("transitops_token");
+    localStorage.removeItem("transitops_user");
+    setLocation("/login");
+    toast({ title: "Signed out successfully" });
   };
 
-  if (isLoading || !isReady) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -84,8 +91,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <Link key={item.href} href={item.href}>
                 <div className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer text-sm font-medium font-mono",
-                  isActive 
-                    ? "bg-primary/10 text-primary" 
+                  isActive
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}>
                   <Icon className="h-4 w-4" />
@@ -99,11 +106,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="p-4 border-t border-border mt-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium truncate">{user?.fullName}</span>
-              <span className="text-xs text-muted-foreground font-mono">{user?.role?.replace('_', ' ')}</span>
+              <span className="text-sm font-medium truncate">{user?.name}</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {user?.role?.replace(/_/g, " ")}
+              </span>
             </div>
           </div>
-          <Button variant="outline" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={handleLogout}>
+          <Button
+            variant="outline"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={handleLogout}
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
