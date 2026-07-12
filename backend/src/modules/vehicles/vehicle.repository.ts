@@ -24,8 +24,9 @@ class VehicleRepository {
         });
     }
 
-    findAll() {
+    findAll(filter?: { status?: string }) {
         return prisma.vehicle.findMany({
+            where: filter?.status ? { status: filter.status as any } : undefined,
             orderBy: {
                 createdAt: "desc",
             },

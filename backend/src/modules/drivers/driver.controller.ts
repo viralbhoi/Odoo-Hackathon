@@ -22,11 +22,12 @@ class DriverController {
 
     getAll = asyncHandler(async (_: Request, res: Response) => {
         const drivers = await driverService.getAll();
+        res.json({ success: true, data: drivers });
+    });
 
-        res.json({
-            success: true,
-            data: drivers,
-        });
+    getAvailable = asyncHandler(async (_: Request, res: Response) => {
+        const drivers = await driverService.getAvailable();
+        res.json({ success: true, data: drivers });
     });
 
     getById = asyncHandler(async (req: Request<IdParams>, res: Response) => {

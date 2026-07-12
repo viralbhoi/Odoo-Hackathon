@@ -21,6 +21,10 @@ class DriverService {
         return driverRepository.findAll();
     }
 
+    getAvailable() {
+        return driverRepository.findAvailable();
+    }
+
     async getById(id: string) {
         const driver = await driverRepository.findById(id);
 
