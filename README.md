@@ -179,120 +179,42 @@ Every important system action is recorded for traceability.
 
 ## Frontend
 
-- React
-- TypeScript
-- Vite
-- Material UI
-- TanStack Query
-- React Hook Form
-- Zod
-- Recharts
+- **React 18** + **TypeScript** — component-based UI
+- **Vite** — lightning-fast dev server and bundler
+- **Tailwind CSS v4** + **Shadcn/ui** — design system and component library
+- **Wouter** — lightweight client-side routing
+- **TanStack Query** — server state management
+- **React Hook Form** + **Zod** — form handling and schema validation
+- **Recharts** — charts and analytics visualizations
+- **Lucide React** — icon set
 
 ---
 
 ## Backend
 
-- Node.js
-- Express.js
-- TypeScript
-- PostgreSQL
-- Prisma ORM
+- **Node.js** + **Express.js** + **TypeScript** — REST API server
+- **PostgreSQL** (Neon serverless) — primary database
+- **Prisma ORM** — type-safe database client with migrations
+- **bcrypt** — password hashing
+- **pnpm workspaces** — monorepo package management
 
 ---
 
-## Authentication
+## Authentication & Security
 
-- JWT
-- Refresh Tokens
-- Google OAuth
-
----
-
-## Performance
-
-- Redis Cache
+- **JWT** Access Tokens (8-hour expiry) + Refresh Tokens (7-day expiry)
+- **Role-Based Access Control (RBAC)** — enforced server-side via JWT middleware
+- **Helmet** — HTTP security headers
+- **CORS** — origin-restricted
+- **express-rate-limit** — brute-force protection
+- **Zod** — request body validation on all endpoints
 
 ---
 
-## Security
+## API Documentation
 
-- Helmet
-- CORS
-- Rate Limiting
-- Zod Validation
-
----
-
-## Documentation
-
-- Swagger (OpenAPI)
-
----
-
-## Monitoring
-
-- Pino Logger
-- Sentry
-
----
-
-# 📂 Project Structure
-
-```
-transitops
-│
-├── frontend/
-│
-├── backend/
-│
-└── README.md
-```
-
----
-
-# 🚀 Getting Started
-
-## Clone Repository
-
-```bash
-git clone <repository-url>
-
-cd transitops
-```
-
----
-
-## Backend
-
-```bash
-cd backend
-
-npm install
-
-npm run dev
-```
-
----
-
-## Frontend
-
-```bash
-cd frontend
-
-npm install
-
-npm run dev
-```
-
----
-
-# 📚 API Documentation
-
-Swagger Documentation
-
-```
-http://localhost:5000/api/docs
-```
+- **Swagger / OpenAPI 3.0** — auto-generated interactive docs at `/api/docs`
+- **Pino** — structured JSON request logging
 
 ---
 

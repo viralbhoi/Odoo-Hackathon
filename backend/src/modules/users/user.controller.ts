@@ -28,7 +28,7 @@ class UserController {
   async toggleStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const user = await userService.toggleStatus(id);
+      const user = await userService.toggleStatus(id as string);
       res.json({ success: true, data: user });
     } catch (err) {
       next(err);

@@ -16,11 +16,21 @@ app.use(helmet());
 
 app.use(
     cors({
-        origin: "http://localhost:5173",
+        origin: (origin, callback) => {
+            const allowed = [
+                process.env.FRONTEND_URL,
+                "http://localhost:5173",
+                "http://localhost:4173",
+            ].filter(Boolean);
+            if (!origin || allowed.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error(`CORS: Origin ${origin} not allowed`));
+            }
+        },
         credentials: true,
     })
 );
-
 app.use(express.json());
 
 app.use(cookieParser());

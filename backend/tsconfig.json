@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "bundler",
 
     "rootDir": "./src",
     "outDir": "./dist",
@@ -27,5 +27,22 @@
 
   "include": ["src"],
 
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/seed.ts",
+    "src/lib",
+    "src/middlewares",
+    "src/routes/auth.ts",
+    "src/routes/dashboard.ts",
+    "src/routes/docs.ts",
+    "src/routes/drivers.ts",
+    "src/routes/fuel-expenses.ts",
+    "src/routes/health.ts",
+    "src/routes/maintenance.ts",
+    "src/routes/reports.ts",
+    "src/routes/trips.ts",
+    "src/routes/vehicles.ts"
+  ]
 }
+
