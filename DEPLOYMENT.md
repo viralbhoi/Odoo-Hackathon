@@ -45,13 +45,14 @@ Once deployed, copy the URL — it will look like:
 1. Go to [vercel.com](https://vercel.com) → **Add New → Project**
 2. Import the GitHub repo: `viralbhoi/Odoo-Hackathon`
 
-### Step 2 — Configure the Project
+### Step 2 — Configure the Project (IMPORTANT for pnpm monorepo)
 | Field | Value |
 |---|---|
-| **Root Directory** | `frontend` |
+| **Root Directory** | *(Leave empty / root of repo)* |
 | **Framework Preset** | `Vite` |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist/public` |
+| **Build Command** | `cd frontend && pnpm run build` |
+| **Output Directory** | `frontend/dist/public` |
+| **Install Command** | `pnpm install` |
 
 ### Step 3 — Add Environment Variable
 In Vercel under **Environment Variables**, add:
