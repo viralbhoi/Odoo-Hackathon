@@ -52,7 +52,7 @@ class DriverAuthController {
       const driverId = (req as any).driverId;
       const { id } = req.params;
       const { actualDistance } = req.body;
-      const trip = await driverAuthService.completeTrip(driverId, id, Number(actualDistance ?? 0));
+      const trip = await driverAuthService.completeTrip(driverId, id as string, Number(actualDistance ?? 0));
       res.json({ success: true, data: trip, message: "Trip marked as completed. Great work!" });
     } catch (err) {
       next(err);
